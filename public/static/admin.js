@@ -146,6 +146,25 @@ $(function () {
                 if (!$this.data('input')) $this.data('input', $('[name="' + field + '"]').get(0));
                 $this.uploadFile(function (url) {
                     $($this.data('input')).val(url).trigger('change');
+
+                    //如果是事件扫描件第一张,就传到百度接口识别文字
+                    var curr_field = $this.data('field');
+                    if (curr_field == 'scan_img') {
+                        var img_urls   = $(" input[name='"+curr_field+"' ] ").val();
+                            img_urls   = img_urls.split('|');
+                        var img_length = img_urls.length;
+                        //如果是第一张就识别
+                        if (img_length == 1) {
+                            $("#ocr_status").html("识别中......");
+                            var url = window.ROOT_URL + "/account/events/_sendOCR";
+                            $.post(url,{img_url:img_urls[0]},function(res){
+                                $("#title").val(res.msg);
+                                $("#ocr_status").html("识别完成。");
+                            },"json");
+                        }
+                    }
+
+
                 });
             });
         };
@@ -527,6 +546,50 @@ $(function () {
         }).trigger('change');
     };
 
+    /*! 上传多个扫描件图片 */
+    $.fn.uploadMultipleScan = function () {
+        var type = $(this).data('type') || 'png,jpg,gif', name = $(this).attr('name') || 'umt-image';
+        var $tpl = $('<a class="uploadimage"></a>').attr('data-file', 'mul').attr('data-field', name).attr('data-type', type);
+        $(this).attr('name', name).after($tpl.data('input', this)).on('change', function () {
+            var input = this;
+            this.setImageData = function () {
+                input.value = input.getImageData().join('|');
+            };
+            this.getImageData = function () {
+                var values = [];
+                $(input).prevAll('.uploadimage').map(function () {
+                    values.push($(this).attr('data-tips-image'));
+                });
+                return values.reverse(), values;
+            };
+            var urls = this.getImageData(), srcs = this.value.split('|');
+            for (var i in srcs) if (srcs[i]) urls.push(srcs[i]);
+            $(this).prevAll('.uploadimage').remove();
+            this.value = urls.join('|');
+            for (var i in urls) {
+                var tpl = '<div class="uploadimage uploadimagemtl"><a class="layui-icon margin-right-5">&#xe602;</a><a class="layui-icon margin-right-5">&#x1006;</a><a class="layui-icon margin-right-5">&#xe603;</a></div>';
+                var $tpl = $(tpl).attr('data-tips-image', urls[i]).css('backgroundImage', 'url(' + urls[i] + ')').on('click', 'a', function (e) {
+                    e.stopPropagation();
+                    var $cur = $(this).parent();
+                    switch ($(this).index()) {
+                        case 1:// remove
+                            return $.msg.confirm('确定要移除这张图片吗？', function (index) {
+                                $cur.remove(), input.setImageData(), $.msg.close(index);
+                            });
+                        case 0: // right
+                            var lenght = $cur.siblings('div.uploadimagemtl').length;
+                            if ($cur.index() !== lenght) $cur.next().after($cur);
+                            return input.setImageData();
+                        case 2: // left
+                            if ($cur.index() !== 0) $cur.prev().before($cur);
+                            return input.setImageData();
+                    }
+                });
+                $(this).before($tpl);
+            }
+        }).trigger('change');
+    };
+
     /*! 注册 data-load 事件行为 */
     $body.on('click', '[data-load]', function () {
         var url = $(this).attr('data-load'), tips = $(this).attr('data-tips'), time = $(this).attr('data-time');
@@ -705,3 +768,46 @@ $(function () {
     $.menu.listen();
     $.vali.listen();
 });
+
+/*弹出层*/
+/*
+    参数解释：
+    title	标题
+    url		请求的url
+    id		需要操作的数据id
+    w		弹出层宽度（缺省调默认值）
+    h		弹出层高度（缺省调默认值）
+*/
+var layer_index = '';
+function layer_show(title,url,w,h, isMax){
+    if (title == null || title == '') {
+        title=false;
+    };
+    if (url == null || url == '') {
+        url="404.html";
+    };
+    if (w == null || w == '') {
+        w=($(window).width() - 400);
+    };
+    if (h == null || h == '') {
+        h=($(window).height() - 120);
+    };
+
+    var perContent =  layer.open({
+        type: 2,
+        area: [w+'px', h +'px'],
+        fix: false, //不固定
+        maxmin: true,
+        shade:0.4,
+        title: title,
+        content: url,
+        success: function(layero, index){
+            layer_index = index;
+
+        }
+    });
+    if (isMax == true) {
+        layer.full(perContent);
+    };
+
+}

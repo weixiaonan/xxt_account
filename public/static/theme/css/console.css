@@ -205,6 +205,9 @@ label.think-checkbox,label.think-radio{display:inline-block;margin-right:10px}
 .form_table .layui-input-inline {
     width: 95%;
 }
+.layui-table th {
+    font-weight: bold;
+}
 
 .form_table .layui-input-inline select{
     width: 120px;
@@ -257,4 +260,8 @@ label.think-checkbox,label.think-radio{display:inline-block;margin-right:10px}
 }
 .gray{
     color: #2f4056 !important;
+}
+
+.title-label {
+    font-weight: bold !important;
 }

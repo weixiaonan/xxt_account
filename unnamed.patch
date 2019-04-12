@@ -1,0 +1,2439 @@
+Index: vendor/composer/autoload_psr4.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- vendor/composer/autoload_psr4.php	(revision 30f2eb108219bf6cd246065ac3cf07986093e51d)
++++ vendor/composer/autoload_psr4.php	(revision )
+@@ -8,6 +8,7 @@
+ return array(
+     'think\\helper\\' => array($vendorDir . '/topthink/think-helper/src'),
+     'think\\composer\\' => array($vendorDir . '/topthink/think-installer/src'),
++    'think\\captcha\\' => array($vendorDir . '/topthink/think-captcha/src'),
+     'think\\' => array($vendorDir . '/topthink/think-queue/src'),
+     'library\\' => array($vendorDir . '/zoujingli/think-library/src'),
+     'WePay\\' => array($vendorDir . '/zoujingli/wechat-developer/WePay'),
+Index: application/admin/view/main.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/admin/view/main.html	(revision 30f2eb108219bf6cd246065ac3cf07986093e51d)
++++ application/admin/view/main.html	(revision )
+@@ -2,7 +2,7 @@
+     {block name='style'}{/block}
+     {notempty name='title'}
+     <div class="layui-card-header layui-anim layui-anim-fadein notselect">
+-        <span class="layui-icon font-s10 color-desc margin-right-5">&#xe65b;</span>{$title|default=''}
++        <span class="layui-icon font-s10 color-desc margin-right-5">&#xe65b;</span><b>{$title|default=''}</b>
+         <div class="pull-right">{block name='button'}{/block}</div>
+     </div>
+     {/notempty}
+Index: public/static/theme/css/console.css
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- public/static/theme/css/console.css	(revision 30f2eb108219bf6cd246065ac3cf07986093e51d)
++++ public/static/theme/css/console.css	(revision )
+@@ -205,6 +205,9 @@
+ .form_table .layui-input-inline {
+     width: 95%;
+ }
++.layui-table th {
++    font-weight: bold;
++}
+ 
+ .form_table .layui-input-inline select{
+     width: 120px;
+@@ -258,3 +261,7 @@
+ .gray{
+     color: #2f4056 !important;
+ }
++
++.title-label {
++    font-weight: bold !important;
++}
+Index: application/account/view/cases/index.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/account/view/cases/index.html	(revision )
++++ application/account/view/cases/index.html	(revision )
+@@ -0,0 +1,87 @@
++{extend name='admin@main'}
++
++{block name="button"}
++<!--{if auth("account/cases/add")}-->
++<button data-open='{:url("add")}' data-title="录入案件" class='layui-btn layui-btn-sm layui-btn-normal'>录入案件</button>
++<!--{/if}-->
++<!--{if auth("account/cases/del")}-->
++<button data-action='{:url("del")}' data-rule="id#{key}" class='layui-btn layui-btn-sm layui-btn-danger'>删除案件</button>
++<!--{/if}-->
++{/block}
++
++{block name="content"}
++<table class="layui-table" lay-skin="">
++    <caption class="margin-bottom-10 text-left">{include file='cases/index_search'}</caption>
++    <!--{notempty name='list'}-->
++    <tr>
++        <th class='list-table-check-td think-checkbox'>
++            <input data-auto-none data-check-target='.list-check-box' type='checkbox'>
++        </th>
++
++        <th class='text-left nowrap'>案件名称</th>
++        <th class="text-center">开始时间</th>
++        <th class="text-center">结案时间</th>
++        <th class="text-center">状态</th>
++        <th class="text-center">事件数量</th>
++        <th></th>
++        <th class="text-center">时间轴</th>
++    </tr>
++    <!--{/notempty}-->
++    <tbody>
++    <!--{foreach $list as $key=>$vo}-->
++    <tr>
++        <td class='list-table-check-td think-checkbox'>
++            <input class="list-check-box" value='{$vo.id}' type='checkbox'>
++        </td>
++
++        <td class='text-left nowrap'>
++            {$vo.title|default=''}
++            <!-- {volist  name="$vo.case_img_arr" id="v" }  -->
++            <!-- {if condition="$v neq '' "} -->
++            <a data-tips-image="{$v|default=''}" class="fa fa-image font-s14 margin-left-5"></a>
++            <!-- {/if} -->
++            <!--{/volist}-->
++
++        </td>
++        <td class='text-center nowrap'>{eq name='vo.start_time' value='0'}未设置开始时间{else}{$vo.start_time|date='Y-m-d'}{/eq}</td>
++        <td class='text-center nowrap'>{eq name='vo.end_time'   value='0'}未设置结案时间{else}{$vo.end_time|date='Y-m-d'}{/eq}</td>
++        <td class='text-center nowrap'>
++            {eq name='vo.status' value='0'}<span class="layui-badge">未结案</span>{else}<span class="layui-badge layui-bg-green">已结案</span>{/eq}<br>
++        </td>
++        <td class='text-center nowrap'>
++            <!-- {if condition="$vo.events_num eq 0 "} -->
++            <b>{$vo.events_num|default=''}</b>
++            <!-- {else/} -->
++            <a data-open='{:url("account/events/index")}?cases_id={$vo.id}'><b>{$vo.events_num|default=''}</b></a>
++            <!-- {/if} -->
++        </td>
++        <td class='text-left nowrap'>
++
++            {if auth("account/cases/edit")}
++            <a data-title="编辑案件" class="layui-btn layui-btn-xs" data-open='{:url("edit")}?id={$vo.id}'>编 辑</a>
++            {/if}
++
++            {if $vo.status eq 0 and auth("account/cases/close_case")}
++            <a class="layui-btn layui-btn-xs layui-btn-warm" data-confirm="确定要结案吗?" data-action="{:url('close_case')}" data-value="id#{$vo.id};status#1">结 案</a>
++            {/if}
++
++            {if auth("account/cases/del")}
++            <a class="layui-btn layui-btn-xs layui-btn-danger" data-confirm="确定要删除数据吗?" data-action="{:url('del')}" data-value="id#{$vo.id}">删 除</a>
++            {/if}
++
++        </td>
++        <td class='text-center nowrap'><a data-title="案件时间轴" class="layui-btn layui-btn-xs layui-btn layui-btn-normal" onclick="layer_show('案件时间轴','{:url("showTimeAxis")}?id={$vo.id}')" >案件时间轴</a></td>
++    </tr>
++    <!--{/foreach}-->
++    </tbody>
++</table>
++
++{empty name='list'}<span class="notdata">没有记录哦</span>{else}{$pagehtml|raw|default=''}{/empty}
++
++<style>
++    table.trim-bottom-border tr:last-child td {
++        border: none !important;
++    }
++</style>
++
++{/block}
+\ No newline at end of file
+Index: vendor/composer/autoload_files.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- vendor/composer/autoload_files.php	(revision 30f2eb108219bf6cd246065ac3cf07986093e51d)
++++ vendor/composer/autoload_files.php	(revision )
+@@ -10,4 +10,5 @@
+     '9b552a3cc426e3287cc811caefa3cf53' => $vendorDir . '/topthink/think-helper/src/helper.php',
+     'cc56288302d9df745d97c934d6a6e5f0' => $vendorDir . '/topthink/think-queue/src/common.php',
+     '6bfa2db14bcd36db12d0b2121e50b8f2' => $vendorDir . '/zoujingli/think-library/common.php',
++    '1cfd2761b63b0a29ed23657ea394cb2d' => $vendorDir . '/topthink/think-captcha/src/helper.php',
+ );
+Index: vendor/composer/installed.json
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- vendor/composer/installed.json	(revision 30f2eb108219bf6cd246065ac3cf07986093e51d)
++++ vendor/composer/installed.json	(revision )
+@@ -663,5 +663,52 @@
+             "WeChatOpenDeveloper",
+             "wechat"
+         ]
++    },
++    {
++        "name": "topthink/think-captcha",
++        "version": "v2.0.2",
++        "version_normalized": "2.0.2.0",
++        "source": {
++            "type": "git",
++            "url": "https://github.com/top-think/think-captcha.git",
++            "reference": "54c8a51552f99ff9ea89ea9c272383a8f738ceee"
++        },
++        "dist": {
++            "type": "zip",
++            "url": "https://api.github.com/repos/top-think/think-captcha/zipball/54c8a51552f99ff9ea89ea9c272383a8f738ceee",
++            "reference": "54c8a51552f99ff9ea89ea9c272383a8f738ceee",
++            "shasum": "",
++            "mirrors": [
++                {
++                    "url": "https://dl.laravel-china.org/%package%/%reference%.%type%",
++                    "preferred": true
++                }
++            ]
++        },
++        "require": {
++            "topthink/framework": "5.1.*"
++        },
++        "time": "2017-12-31T16:37:49+00:00",
++        "type": "library",
++        "installation-source": "dist",
++        "autoload": {
++            "psr-4": {
++                "think\\captcha\\": "src/"
++            },
++            "files": [
++                "src/helper.php"
++            ]
++        },
++        "notification-url": "https://packagist.org/downloads/",
++        "license": [
++            "Apache-2.0"
++        ],
++        "authors": [
++            {
++                "name": "yunwuxin",
++                "email": "448901948@qq.com"
++            }
++        ],
++        "description": "captcha package for thinkphp5"
+     }
+ ]
+Index: public/static/theme/css/top_left_black.css
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- public/static/theme/css/top_left_black.css	(revision 30f2eb108219bf6cd246065ac3cf07986093e51d)
++++ public/static/theme/css/top_left_black.css	(revision )
+@@ -1,43 +1,18 @@
+-/** 顶部菜单 */
+-.framework-topbar{font-size:14px;clear:both;height: 60px;z-index:2;background: #23262E;border-bottom: 3px solid #18BAAC;}
+-.framework-topbar a{text-decoration:none}.framework-topbar a:focus{outline:none}
+-.framework-topbar .topbar-head{z-index:3;height: 60px;position:relative;width:220px;box-shadow:0 1px 3px 0 rgba(0,0,0,.1);}
+-.framework-topbar .topbar-head .topbar-logo{color:#fff;display:block;font-size:18px;line-height: 60px;text-align:center;width:100%;}
+-.framework-topbar .topbar-btn{background:none;color:#fff;font-size:14px;height: 60px;line-height: 60px;z-index:2;display:block;padding:0 20px;}
+-.framework-topbar .topbar-btn:hover,.framework-topbar .topbar-btn.active{background: #009688;border-bottom: 3px solid #18BAAC;}
+-.framework-topbar .dropdown-backdrop{display:none!important}
+-.framework-topbar .dropdown .dropdown-menu{margin:0;padding:0;width:100%;min-width:0;border:none;border-radius:0;z-index:2;}
+-.framework-topbar .dropdown .dropdown-menu .topbar-btn{height:auto;padding:0;font-size:14px;color:#333;border-top:1px solid #eaedf1}
+-.framework-topbar .dropdown .dropdown-menu .topbar-btn a{padding:0;line-height:45px;text-align:center;}
+-.framework-topbar .dropdown.open .toggle-icon{transform:rotate(180deg);-o-transform:rotate(180deg);-ms-transform:rotate(180deg);-moz-transform:rotate(180deg);-webkit-transform:rotate(180deg)}
+-.framework-topbar .dropdown.open .topbar-btn{color:#333;background:#fff}
+-
+-/* 左则菜单 */
+-.framework-leftbar{font-size:13px;top: 60px;bottom:0;width:220px;position:fixed;overflow:auto;overflow-x:hidden;background: #393D49;box-shadow:1px 0 3px 0 rgba(0,0,0,.08);z-index:3;border-right: 2px solid #18BAAC;}
+-.framework-leftbar .leftbar-container .line-top{font-size:10px;color:#ccc;text-align:center;letter-spacing:2px}
+-.framework-leftbar .leftbar-container .font-icon{min-width:15px;text-align:center;margin-right:5px;display:inline-block;font-size:14px}
+-.framework-leftbar .leftbar-container a{line-height:40px;display:block;background:#22282e;color:#fff;padding:0 15px;border-bottom:1px solid rgba(0,0,0,.05);}
+-.framework-leftbar .leftbar-container a:hover{text-decoration:none;background:#414d5c}
+-.framework-leftbar .leftbar-container div div{display:none}
+-.framework-leftbar .leftbar-container div.open > a > i{transform:rotate(180deg);-o-transform:rotate(180deg);-ms-transform:rotate(180deg);-moz-transform:rotate(180deg);-webkit-transform:rotate(180deg)}
+-.framework-leftbar .leftbar-container div.open div{display:block}
+-.framework-leftbar .leftbar-container div div a{padding-left:30px;background:none}
+-.framework-leftbar .leftbar-container > a.active,
+-.framework-leftbar .leftbar-container div div a.active{background: #009688;}
+-
+ 
+ .layui-nav-tree .layui-nav-child dd.layui-this, .layui-nav-tree .layui-nav-child dd.layui-this a, .layui-nav-tree .layui-this, .layui-nav-tree .layui-this>a, .layui-nav-tree .layui-this>a:hover{
+     background-color: #009688;
+     border-right: 1px solid #18BAAC !important;
+ }
++/** 顶部菜单 */
+ 
+-.layui-header{height:60px;;background: #23262E;border-bottom: 3px solid #18BAAC;}
++.layui-header{height:60px;;background: #393D49;border-bottom: 3px solid #18BAAC;}
+ .layui-header .layui-nav-item.layui-this{background:#009688;border-bottom: 3px solid #18BAAC;}
+ 
+ 
+ .layui-layout-admin .layui-header {
+-    background-color: #23262E;
++    background-color: #393D49;
+ }
++/* 左则菜单 */
+ .leftbar{
+     border-right: 2px solid #18BAAC !important;
+ 
+Index: vendor/composer/ClassLoader.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- vendor/composer/ClassLoader.php	(revision 30f2eb108219bf6cd246065ac3cf07986093e51d)
++++ vendor/composer/ClassLoader.php	(revision )
+@@ -279,7 +279,7 @@
+      */
+     public function setApcuPrefix($apcuPrefix)
+     {
+-        $this->apcuPrefix = function_exists('apcu_fetch') && filter_var(ini_get('apc.enabled'), FILTER_VALIDATE_BOOLEAN) ? $apcuPrefix : null;
++        $this->apcuPrefix = function_exists('apcu_fetch') && ini_get('apc.enabled') ? $apcuPrefix : null;
+     }
+ 
+     /**
+@@ -377,11 +377,11 @@
+             $subPath = $class;
+             while (false !== $lastPos = strrpos($subPath, '\\')) {
+                 $subPath = substr($subPath, 0, $lastPos);
+-                $search = $subPath . '\\';
++                $search = $subPath.'\\';
+                 if (isset($this->prefixDirsPsr4[$search])) {
+-                    $pathEnd = DIRECTORY_SEPARATOR . substr($logicalPathPsr4, $lastPos + 1);
+                     foreach ($this->prefixDirsPsr4[$search] as $dir) {
+-                        if (file_exists($file = $dir . $pathEnd)) {
++                        $length = $this->prefixLengthsPsr4[$first][$search];
++                        if (file_exists($file = $dir . DIRECTORY_SEPARATOR . substr($logicalPathPsr4, $length))) {
+                             return $file;
+                         }
+                     }
+Index: application/admin/controller/Index.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/admin/controller/Index.php	(revision 30f2eb108219bf6cd246065ac3cf07986093e51d)
++++ application/admin/controller/Index.php	(revision )
+@@ -50,9 +50,13 @@
+      */
+     public function main()
+     {
+-        $this->title = '后台首页';
++        if (!\app\admin\service\Auth::isLogin()) {
++            $this->error('需要登录才能操作哦！');
++        }
++        $this->title = '数据统计';
+         $this->think_ver = \think\App::VERSION;
+         $this->mysql_ver = Db::query('select version() as ver')[0]['ver'];
++        $this->assign('data', []);
+         $this->fetch();
+     }
+ 
+Index: application/account/view/cases/index_search.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/account/view/cases/index_search.html	(revision )
++++ application/account/view/cases/index_search.html	(revision )
+@@ -0,0 +1,30 @@
++<fieldset>
++    <legend  class="layui-bg-cyan">条件搜索</legend>
++    <form class="layui-form layui-form-pane form-search" action="{:request()->url()}" onsubmit="return false" method="get" autocomplete="off">
++        <div class="layui-form-item layui-inline">
++            <label class="layui-form-label">案件名称</label>
++            <div class="layui-input-inline">
++                <input name="title" value="{$Think.get.title|default=''}" placeholder="请输入案件名称" class="layui-input">
++            </div>
++        </div>
++
++        <div class="layui-form-item layui-inline">
++            <label class="layui-form-label">案件状态</label>
++            <div class="layui-input-inline">
++                <select class="layui-select" name="status">
++                    {foreach [''=>'- 全部案件 -','1'=>'已结案','0'=>'未结案'] as $k=>$v}
++                    <!--{eq name='Think.get.status' value='$k.""'}-->
++                    <option selected value="{$k}">{$v}</option>
++                    <!--{else}-->
++                    <option value="{$k}">{$v}</option>
++                    <!--{/eq}-->
++                    {/foreach}
++                </select>
++            </div>
++        </div>
++        <div class="layui-form-item layui-inline">
++            <button class="layui-btn layui-btn-primary"><i class="layui-icon">&#xe615;</i> 搜 索</button>
++        </div>
++    </form>
++    <script>form.render()</script>
++</fieldset>
+\ No newline at end of file
+Index: application/account/view/cases/form.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/account/view/cases/form.html	(revision )
++++ application/account/view/cases/form.html	(revision )
+@@ -0,0 +1,164 @@
++{extend name='admin@main'}
++
++{block name="content"}
++<form onsubmit="return false;" id="GoodsForm" data-auto="true" method="post" class='layui-form layui-card layui-form-pane' autocomplete="off">
++
++    <div class="layui-card-body padding-left-40">
++
++        <div class="layui-form-item">
++            <label class="layui-form-label title-label">案件名称</label>
++            <div class="layui-input-block">
++                <input type="text" name="title" value='{$vo.title|default=""}'
++                       required  title="请输入案件名称" placeholder="请输入案件名称" class="layui-input">
++            </div>
++        </div>
++
++        <div class="layui-form-item">
++            <label class="layui-form-label title-label">开始时间</label>
++            <div class="layui-input-inline">
++                <input name="start_time" id='start_time' readonly value="{$vo.start_time|default=''}"
++                       title="请选择开始时间" placeholder="请选择开始时间" class="layui-input">
++            </div>
++        </div>
++        <div class="layui-form-item">
++            <label class="layui-form-label title-label">结案时间</label>
++            <div class="layui-input-inline">
++                <input name="end_time" id='end_time' readonly value="{$vo.end_time|default=''}"
++                       title="请选择结案时间" placeholder="请选择结案时间" class="layui-input">
++            </div>
++        </div>
++
++        <div class="layui-form-item">
++            <label class="layui-form-label title-label">案件状态</label>
++            <div class="layui-input-block">
++                <input type="radio" name="status" value="1" title="已结案" {if (isset($vo.status) && $vo.status == 1 )} checked="" {/if} >
++                <div class="layui-unselect layui-form-radio"><i class="layui-anim layui-icon"></i><div>已结案</div></div>
++                <input type="radio" name="status" value="0" title="未结案"  {if (isset($vo.status) && $vo.status == 0 )} checked="" {/if} >
++                <div class="layui-unselect layui-form-radio layui-form-radioed"><i class="layui-anim layui-icon layui-anim-scaleSpring"></i><div>未结案</div></div>
++            </div>
++        </div>
++
++        <div class="layui-form-item">
++            <table class="layui-table">
++                <thead>
++                <tr>
++                    <th class="text-left title-label">案件扫描件组图</th>
++                </tr>
++                <tr>
++                    <td width="auto" class="text-left"><input name="case_img" type="hidden" value="{$vo.case_img|default=''}"></td>
++                </tr>
++                </thead>
++            </table>
++            <script>$('[name="case_img"]').uploadMultipleImage()</script>
++        </div>
++
++
++        <div class="layui-form-item layui-form-text">
++            <label class="layui-form-label title-label">案件内容</label>
++            <div class="layui-input-block">
++                <textarea name="content">{$vo.content|default=''|raw}</textarea>
++            </div>
++        </div>
++
++        <div class="layui-form-item text-center">
++            {notempty name='vo.id'}<input type="hidden" name="id" value="{$vo.id}">{/notempty}
++            <button class="layui-btn layui-btn-danger" ng-click="hsitoryBack()" type="button">取消编辑</button>
++            <button class="layui-btn" type="submit">提交保存</button>
++        </div>
++
++    </div>
++</form>
++
++<style>
++
++
++
++    .goods-spec-box input {
++        z-index: 1;
++        width: 120px;
++        position: relative;
++        border: 1px solid #999;
++        padding: 5px 0 5px 45px;
++        display: inline-block !important;
++    }
++
++    .goods-spec-box input[type=checkbox] {
++        z-index: 2;
++        width: 40px;
++        height: 28px;
++        border: none;
++        cursor: pointer;
++        appearance: none;
++        position: absolute;
++        -webkit-appearance: none;
++    }
++
++    .goods-spec-box input[type=checkbox]:before {
++        top: 1px;
++        left: 1px;
++        width: 40px;
++        height: 26px;
++        content: ' ';
++        position: absolute;
++        background: #c9c9c9;
++    }
++
++    .goods-spec-box input[type=checkbox]:after {
++        top: 1px;
++        left: 1px;
++        color: #999;
++        width: 40px;
++        height: 26px;
++        content: '\e63f';
++        font-size: 16px;
++        line-height: 26px;
++        position: absolute;
++        text-align: center;
++        font-family: 'layui-icon';
++    }
++
++    .goods-spec-box input[type=checkbox]:checked:after {
++        color: #333;
++        content: '\e605';
++    }
++</style>
++
++{/block}
++
++{block name='script'}
++<script>
++    window.form.render();
++    window.laydate.render({elem: '#start_time'});
++    window.laydate.render({elem: '#end_time'});
++
++    require(['ckeditor', 'angular'], function () {
++        window.createEditor('[name="content"]', {height: 350});
++        let app = angular.module("GoodsForm", []).run(callback);
++        angular.bootstrap(document.getElementById(app.name), [app.name]);
++
++        function callback($rootScope) {
++            $rootScope.isAddMode = parseInt('{$isAddMode|default=0}');
++            let defaultValues = angular.fromJson('{$defaultValues|raw|default=0}') || {};
++            $rootScope.specs = angular.fromJson('{$vo.specs|raw|default=0}') || [{name: '默认分组', list: [{name: '默认规格', check: true}]}];
++
++            // 返回商品列表
++            $rootScope.hsitoryBack = function () {
++                $.msg.confirm('确定要取消编辑吗？', function (index) {
++                    history.back(), $.msg.close(index);
++                });
++            };
++            // 设置默认值
++            $rootScope.setValue = function (key, type, value, call) {
++                defaultValues[key] || (defaultValues[key] = {});
++                return defaultValues[key][type] = eval(call.replace('_', "'" + value + "'"));
++            };
++            // 读取默认值
++            let getValue = function (key, callback) {
++                if (typeof callback === 'function') return callback(defaultValues[key] || {});
++            };
++
++
++        }
++    })
++</script>
++{/block}
+\ No newline at end of file
+Index: application/account/view/cases/show_time_axis.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/account/view/cases/show_time_axis.html	(revision )
++++ application/account/view/cases/show_time_axis.html	(revision )
+@@ -0,0 +1,90 @@
++
++
++<link rel="stylesheet" href="__ROOT__/static/timegsider/css/jquery-ui-1.8.5.custom.css" type="text/css" media="screen" title="no title" charset="utf-8">
++
++<link rel="stylesheet" href="__ROOT__/static/timegsider/timeglider/Timeglider.css" type="text/css" media="screen" title="no title" charset="utf-8">
++
++
++<style type='text/css'>
++
++    body {
++        /* make sure there's no wiggle room */
++        margin:0;
++        padding:0;
++    }
++
++    #placement {
++        margin:0;
++        height:550px;
++    }
++
++</style>
++
++
++
++<!-- target div for TG widget -->
++<div id='placement'></div>
++
++
++
++<script src="__ROOT__/static/timegsider/js/json2.js" type="text/javascript" charset="utf-8"></script>
++<script src="__ROOT__/static/timegsider/js/jquery-1.9.1.min.js" type="text/javascript" charset="utf-8"></script>
++<script src="__ROOT__/static/timegsider/js/jquery-ui-1.10.3.custom.min.js" type="text/javascript" charset="utf-8"></script>
++<script src="__ROOT__/static/timegsider/js/underscore-min.js" type="text/javascript" charset="utf-8"></script>
++<script src="__ROOT__/static/timegsider/js/backbone-min.js" type="text/javascript" charset="utf-8"></script>
++<script src="__ROOT__/static/timegsider/js/jquery.tmpl.js" type="text/javascript" charset="utf-8"></script>
++<script src="__ROOT__/static/timegsider/js/ba-debug.min.js" type="text/javascript" charset="utf-8"></script>
++<script src="__ROOT__/static/timegsider/js/ba-tinyPubSub.js" type="text/javascript" charset="utf-8"></script>
++<script src="__ROOT__/static/timegsider/js/jquery.mousewheel.js" type="text/javascript" charset="utf-8"></script>
++<script src="__ROOT__/static/timegsider/js/jquery.ui.ipad.js" type="text/javascript" charset="utf-8"></script>
++<script src="__ROOT__/static/timegsider/js/globalize.js" type="text/javascript" charset="utf-8"></script>
++
++<script src="__ROOT__/static/timegsider/timeglider/TG_Date.js" type="text/javascript" charset="utf-8"></script>
++<script src="__ROOT__/static/timegsider/timeglider/TG_Org.js" type="text/javascript" charset="utf-8"></script>
++<script src="__ROOT__/static/timegsider/timeglider/TG_Timeline.js" type="text/javascript" charset="utf-8"></script>
++<script src="__ROOT__/static/timegsider/timeglider/TG_TimelineView.js" type="text/javascript" charset="utf-8"></script>
++<script src="__ROOT__/static/timegsider/timeglider/TG_Mediator.js" type="text/javascript" charset="utf-8"></script>
++<script src="__ROOT__/static/timegsider/timeglider/timeglider.timeline.widget.js" type="text/javascript"></script>
++
++<script src="__ROOT__/static/timegsider/timeglider/timeglider.datepicker.js" type="text/javascript"></script>
++<script src="__ROOT__/static/timegsider/js/jquery.jscrollpane.min.js" type="text/javascript"></script>
++
++<!-- ADD THIS TO REGISTER WINDOW SIZE CHANGES -->
++<script src="__ROOT__/static/timegsider/js/ba-throttle-debounce.min.js" type="text/javascript"></script>
++<script type='text/javascript'>
++
++    $(function () {
++
++
++        var tg1 = $("#placement").timeline({
++            "timezone":"-05:00",
++            "min_zoom":1,
++            "max_zoom":55,
++            "image_lane_height":100,
++            "icon_folder":"__ROOT__/static/timegsider/timeglider/icons/",
++            "data_source":{$json_data|raw},
++            "constrain_to_data": false
++        });
++
++        tg_actor = tg1.data("timeline");
++
++        function stretchTG() {
++            var doc_ht = $(window).height()
++            $("#placement").css({"height":doc_ht});
++            tg_actor.resize();
++        }
++
++        window.setTimeout(function() {
++            stretchTG()
++        }, 500);
++
++        $(window).resize( $.debounce( 250, false, function(e){
++            stretchTG()
++        }));
++
++    });
++
++</script>
++
++
++
+Index: application/admin/view/index/main.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/admin/view/index/main.html	(revision 30f2eb108219bf6cd246065ac3cf07986093e51d)
++++ application/admin/view/index/main.html	(revision )
+@@ -1,7 +1,461 @@
+ {extend name='main'}
+ 
+ {block name='content'}
+-<table class="layui-table" lay-even lay-skin="line">
++
++
++<style>
++    .layui-card{
++        border: 1px solid #dedede;
++    }
++
++    .layui-card-header .layui-a-tips {
++        position:absolute;
++        right:15px;
++        color:#01AAED
++    }
++    .layuiadmin-card-text {
++        background-color:#f8f8f8;
++        color:#777;
++        padding:24px
++    }
++    .layuiadmin-card-text .layui-text-top {
++        padding-bottom:10px
++    }
++    .layuiadmin-card-text .layui-text-top i {
++        margin-right:10px;
++        font-size:24px;
++        color:#009688
++    }
++    .layuiadmin-card-text .layui-text-top a {
++        line-height:24px;
++        font-size:16px;
++        vertical-align:top
++    }
++    .layuiadmin-card-text .layui-text-center {
++        height:44px;
++        line-height:22px;
++        margin-bottom:10px;
++        overflow:hidden
++    }
++    .layuiadmin-card-text .layui-text-bottom {
++        position:relative
++    }
++    .layuiadmin-card-text .layui-text-bottom a {
++        color:#777;
++        font-size:12px;
++        text-overflow:ellipsis;
++        word-break:break-all
++    }
++    .layuiadmin-card-text .layui-text-bottom span {
++        color:#CCC;
++        font-size:12px;
++        position:absolute;
++        right:0
++    }
++    .layuiadmin-badge,.layuiadmin-btn-group,.layuiadmin-span-color {
++        position:absolute;
++        right:15px
++    }
++    .layuiadmin-card-link a:hover,.layuiadmin-card-team li a:hover,.layuiadmin-card-text a:hover {
++        color:#01AAED;
++        transition:all .3s
++    }
++    .layuiadmin-card-status {
++        padding:0 10px 10px
++    }
++    .layuiadmin-card-status dd {
++        padding:15px 0;
++        border-bottom:1px solid #EEE;
++        display:-webkit-flex;
++        display:flex
++    }
++    .layuiadmin-card-status dd:last-child {
++        border:none
++    }
++    .layuiadmin-card-status dd div.layui-status-img,.layuiadmin-card-team .layui-team-img {
++        width:32px;
++        height:32px;
++        border-radius:50%;
++        background-color:#009688;
++        margin-right:15px
++    }
++    .layuiadmin-card-status dd div.layui-status-img a {
++        width:100%;
++        height:100%;
++        display:inline-block;
++        text-align:center;
++        line-height:32px
++    }
++    .layuiadmin-card-status dd div.layui-status-img img,.layuiadmin-card-team .layui-team-img img {
++        width:50%;
++        height:50%
++    }
++    .layuiadmin-card-status dd div a {
++        color:#01AAED
++    }
++    .layuiadmin-card-status dd div span {
++        color:#BBB
++    }
++    .layuiadmin-card-link {
++        padding-left:10px;
++        font-size:0
++    }
++    .layuiadmin-card-link a {
++        display:inline-block;
++        width:25%;
++        color:#666;
++        font-size:14px;
++        margin-bottom:12px
++    }
++    .layuiadmin-card-link button {
++        vertical-align:top
++    }
++    .layuiadmin-card-link button:hover {
++        color:#009688
++    }
++    .layuiadmin-card-team li {
++        padding:10px 0 10px 10px
++    }
++    .layuiadmin-card-team .layui-team-img {
++        display:inline-block;
++        margin-right:8px;
++        width:24px;
++        height:24px;
++        text-align:center;
++        line-height:24px
++    }
++    .layuiadmin-card-team span {
++        color:#777
++    }
++    .layuiadmin-badge {
++        top:50%;
++        margin-top:-9px;
++        color:#01AAED
++    }
++    .layuiadmin-card-list {
++        padding:15px
++    }
++    .layuiadmin-card-list p.layuiadmin-big-font {
++        font-size:36px;
++        color:#666;
++        line-height:36px;
++        padding:5px 0 10px;
++        overflow:hidden;
++        text-overflow:ellipsis;
++        word-break:break-all;
++        white-space:nowrap
++    }
++    .layuiadmin-card-list p.layuiadmin-normal-font {
++        padding-bottom:10px;
++        font-size:20px;
++        color:#666;
++        line-height:24px
++    }
++    .layuiadmin-span-color {
++        font-size:14px
++    }
++    .layuiadmin-span-color i {
++        padding-left:5px
++    }
++    .layuiadmin-card-status li {
++        position:relative;
++        padding:10px 0;
++        border-bottom:1px solid #EEE
++    }
++    .layuiadmin-card-status li h3 {
++        padding-bottom:5px;
++        font-weight:700
++    }
++    .layuiadmin-card-status li p {
++        padding-bottom:10px
++    }
++    .layuiadmin-card-status li>span {
++        color:#999
++    }
++    .layuiadmin-page-table td span.first {
++        color:#FF5722
++    }
++    .layuiadmin-page-table td span.second {
++        color:#FFB800
++    }
++    .layuiadmin-page-table td span.third {
++        color:#5FB878
++    }
++</style>
++
++
++<div class="layui-fluid">
++    <div class="layui-row layui-col-space15">
++
++        <div class="layui-col-sm6 layui-col-md3">
++            <div class="layui-card">
++                <div class="layui-card-header">
++                    <B>案件</B>
++                    <span class="layui-badge layui-bg-orange layuiadmin-badge">本周</span>
++                </div>
++                <div class="layui-card-body layuiadmin-card-list">
++
++                    <p class="layuiadmin-big-font">{$curriculum|default=0}个</p>
++                    <p>
++                        总数
++                        <span class="layuiadmin-span-color">0个 <i class="layui-icon"></i></span>
++                    </p>
++                </div>
++            </div>
++        </div>
++
++
++        <div class="layui-col-sm6 layui-col-md3">
++            <div class="layui-card">
++                <div class="layui-card-header">
++                    <B>案件</B>
++                    <span data-open="{:url('car/index')}" class="layui-badge layui-bg-red layuiadmin-badge">本月</span>
++                </div>
++                <div class="layui-card-body layuiadmin-card-list">
++                    <p class="layuiadmin-big-font">
++                        {$class|default=0}个
++                    </p>
++                    <p>
++                        总数
++                        <span class="layuiadmin-span-color">0个 <i class="layui-icon"></i></span>
++                    </p>
++                </div>
++            </div>
++        </div>
++        <div class="layui-col-sm6 layui-col-md3">
++            <div class="layui-card">
++                <div class="layui-card-header">
++                    <B>事件</B>
++                    <span  data-open="{:url('driver/index')}" class="layui-badge layui-bg-green layuiadmin-badge">本周</span>
++                </div>
++                <div class="layui-card-body layuiadmin-card-list">
++
++                    <p class="layuiadmin-big-font">
++                        {$system_user|default=0}个
++                    </p>
++                    <p>
++                        总数
++                        <span class="layuiadmin-span-color">0个 <i class="layui-icon"></i></span>
++                    </p>
++                </div>
++            </div>
++        </div>
++
++        <div class="layui-col-sm6 layui-col-md3">
++            <div class="layui-card">
++                <div class="layui-card-header">
++                    <B>事件</B>
++                    <span  data-open="{:url('cargps/index')}" class="layui-badge layui-bg-blue layuiadmin-badge">本月</span>
++                </div>
++                <div class="layui-card-body layuiadmin-card-list">
++                    <p class="layuiadmin-big-font">{$ym_student|default=0}个</p>
++                    <p>
++                        总数
++                        <span class="layuiadmin-span-color">0个 <i class="layui-icon"></i></span>
++                    </p>
++                </div>
++            </div>
++        </div>
++
++        <div class="layui-col-sm12">
++            <div class="layui-card">
++                <div class="layui-card-header title-label">
++                    近12个月案件、事件统计
++                </div>
++                <div class="layui-card-body">
++                    <div class="layui-row">
++                        <div class="layui-col-sm12">
++                            <div class="layui-carousel layadmin-carousel layadmin-dataview" data-anim="fade" lay-filter="LAY-index-pagetwo">
++                                <div carousel-item id="LAY-index-pagetwo">
++                                    <div><i class="layui-icon layui-icon-loading1 layadmin-loading"></i></div>
++                                </div>
++                            </div>
++                        </div>
++                       <!-- <div class="layui-col-sm4">
++                            <div class="layuiadmin-card-list">
++                                <p class="layuiadmin-normal-font">月访问数</p>
++                                <span>同上期增长</span>
++                                <div class="layui-progress layui-progress-big" lay-showPercent="yes">
++                                    <div class="layui-progress-bar" lay-percent="30%"></div>
++                                </div>
++                            </div>
++                            <div class="layuiadmin-card-list">
++                                <p class="layuiadmin-normal-font">月下载数</p>
++                                <span>同上期增长</span>
++                                <div class="layui-progress layui-progress-big" lay-showPercent="yes">
++                                    <div class="layui-progress-bar" lay-percent="20%"></div>
++                                </div>
++                            </div>
++                            <div class="layuiadmin-card-list">
++                                <p class="layuiadmin-normal-font">月收入</p>
++                                <span>同上期增长</span>
++                                <div class="layui-progress layui-progress-big" lay-showPercent="yes">
++                                    <div class="layui-progress-bar" lay-percent="25%"></div>
++                                </div>
++                            </div>
++                        </div>-->
++                    </div>
++                </div>
++            </div>
++        </div>
++
++
++        <div class="layui-col-sm7 layui-hide">
++
++            <div class="layui-card">
++                <div class="layui-card-header">咨询列表
++                    <div class="layui-btn-group layuiadmin-btn-group">
++                        <a data-open="{:url('admissions/index')}" class="layui-btn layui-btn-primary layui-btn-xs">更多</a>
++                    </div>
++                </div>
++                <div class="layui-card-body">
++                    <table class="layui-table layuiadmin-page-table" lay-skin="line">
++                        <thead>
++                        <tr>
++                            <th>姓名</th>
++                            <th>性别</th>
++                            <th>年龄层</th>
++                            <th>咨询课程</th>
++                            <th>咨询方式</th>
++                            <th>联系方式</th>
++                            <th>添加时间</th>
++                        </tr>
++                        </thead>
++                        <tbody>
++                        {volist name="data" id="data" }
++                        <tr>
++
++                            <td class='text-left nowrap'>{$data.truename}</td>
++                            <td class='text-left nowrap'>{$data.sex}</td>
++                            <td class='text-left nowrap'>{$data.age}</td>
++                            <td class='text-left nowrap'>{$data.course}</td>
++                            <td class='text-left nowrap'>{$data.consult}</td>
++                            <td class='text-left nowrap'>{$data.contact}</td>
++                            <td class='text-left nowrap'>{$data.add_time}</td>
++
++                        </tr>
++                        {/volist}
++                        </tbody>
++                    </table>
++                </div>
++            </div>
++
++        </div>
++
++
++        <div class="layui-col-sm5 layui-hide">
++            <div class="layui-card">
++                <div class="layui-card-header">统计</div>
++                <div class="layui-card-body">
++
++                    <div id="car_chart"   style="height: 280px;"></div>
++                    <div id="driver_chart"   style="height: 280px;"></div>
++
++                </div>
++            </div>
++        </div>
++
++    </div>
++</div>
++
++
++
++<script>
++    layui.config({
++        base: '__ROOT__/static/js/' //静态资源所在路径
++    }).extend({
++        index: 'lib/index' //主入口模块
++    }).use(['echartsTheme']);
++
++    layui.use(["carousel"], function() {
++        var e = layui.$
++            , a = (layui.admin,
++            layui.carousel)
++            , l = layui.element
++            , t = layui.device();
++        e(".layadmin-carousel").each(function() {
++            var l = e(this);
++            a.render({
++                elem: this,
++                width: "100%",
++                height:'450px',
++                arrow: "none",
++                interval: l.data("interval"),
++                autoplay: l.data("autoplay") === !0,
++                trigger: t.ios || t.android ? "click" : "hover",
++                anim: l.data("anim")
++            })
++        });
++           // l.render("progress")
++    })
++
++        layui.use(["carousel", "echarts"], function () {
++
++            var e = layui.$
++                , a = (layui.carousel,
++                layui.echarts)
++                , l = []
++                , t = [{
++                tooltip: {
++                    trigger: "axis"
++                },
++                calculable: !0,
++                legend: {
++                    data: ["案件", "事件"]
++                },
++                xAxis: [{
++                    type: "category",
++                    data: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
++                }],
++                yAxis: [{
++                    type: "value",
++                    name: "案件数量",
++                    axisLabel: {
++                        formatter: "{value} 个"
++                    }
++                }, {
++                    type: "value",
++                    name: "事件数量",
++                    axisLabel: {
++                        formatter: "{value} 个"
++                    }
++                }],
++                series: [{
++                    name: "案件",
++                    type: "line",
++                    data: [2, 3, 5, 3, 0, 1, 3, 1, 1, 1, 0, 1]
++                }, {
++                    name: "事件",
++                    type: "line",
++                    yAxisIndex: 1,
++                    data: [1, 2, 7, 6, 0, 2, 5, 3, 3, 3, 0, 1]
++                } ]
++            }]
++                , i = e("#LAY-index-pagetwo").children("div")
++                , n = function (e) {
++                l[e] = a.init(i[e], layui.echartsTheme),
++                    l[e].setOption(t[e]),
++                    window.onresize = l[e].resize;
++
++            };
++            i[0] && n(0);
++
++
++        })
++
++
++
++</script>
++
++
++
++
++
++
++
++
++
++<table class="layui-table layui-hide" lay-even lay-skin="line">
+     <colgroup>
+         <col width="20%">
+         <col width="30%">
+Index: application/account/controller/Events.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/account/controller/Events.php	(revision )
++++ application/account/controller/Events.php	(revision )
+@@ -0,0 +1,209 @@
++<?php
++
++// +----------------------------------------------------------------------
++// | framework
++// +----------------------------------------------------------------------
++// | 版权所有 2014~2018 广州楚才信息科技有限公司 [ http://www.cuci.cc ]
++// +----------------------------------------------------------------------
++// | 官方网站: http://framework.thinkadmin.top
++// +----------------------------------------------------------------------
++// | 开源协议 ( https://mit-license.org )
++// +----------------------------------------------------------------------
++// | github开源项目：https://github.com/zoujingli/ThinkAdmin
++// +----------------------------------------------------------------------
++
++namespace app\account\controller;
++
++use library\Controller;
++use library\tools\Data;
++use function Qiniu\json_decode;
++use think\Db;
++
++/**
++ * 事件管理
++ * Class Cases
++ * @package app\store\controller
++ */
++class Events extends Controller
++{
++    /**
++     * 指定数据表
++     * @var string
++     */
++    protected $table = 'events';
++
++    /**
++     * 事件列表
++    */
++    public function index()
++    {
++        $this->title = '事件管理';
++        $case_id     = $this->request->get('cases_id', 0);
++        $where       = [];
++        $where[]     = ['is_deleted', '=', '0'];
++        if ($case_id) $where[]     = ['cases_id', '=', $case_id];
++        return $this->_query($this->table)
++                    ->equal('status')
++                    ->like('title')
++                    ->where($where)
++                    ->order('id desc')
++                    ->page();
++    }
++
++    /**
++     * 数据列表处理
++     * @param array $data
++     * @throws \think\db\exception\DataNotFoundException
++     * @throws \think\db\exception\ModelNotFoundException
++     * @throws \think\exception\DbException
++     */
++    protected function _index_page_filter(&$data)
++    {
++        foreach ($data as &$row) {
++            $row['scan_img_arr'] = explode('|', $row['scan_img']);
++            $row['case_title']   = DB::name('cases')->where(['id' => $row['cases_id']])->value('title');
++         }
++
++    }
++
++
++
++    /**
++     * 录入案件
++     * @return mixed
++     */
++    public function add()
++    {
++        $this->title = '录入事件';
++        $this->isAddMode = '1';
++        $cases_list = DB::name('cases')->where('is_deleted', '=', 0)->field('id,title')->select();
++        $this->assign('cases_list', $cases_list);
++        return $this->_form($this->table, 'form');
++    }
++
++    /**
++     * 编辑商品信息
++     * @return mixed
++     */
++    public function edit()
++    {
++        $this->title = '编辑事件';
++        $this->isAddMode = '0';
++        $cases_list = DB::name('cases')->where('is_deleted', '=', 0)->field('id,title')->select();
++        $this->assign('cases_list', $cases_list);
++        return $this->_form($this->table, 'form');
++    }
++
++    /**
++     * 表单数据处理
++     * @param array $data
++     * @throws \think\Exception
++     * @throws \think\db\exception\DataNotFoundException
++     * @throws \think\db\exception\ModelNotFoundException
++     * @throws \think\exception\DbException
++     * @throws \think\exception\PDOException
++     */
++    protected function _form_filter(&$data)
++    {
++        // 添加
++        if ($this->request->isGet()) {
++            if ($data) {
++                if ($data['start_time'] > 0) {
++                    $data['start_time'] = date('Y-m-d', $data['start_time']);
++                } else {
++                    $data['start_time'] = '';
++                }
++                if ($data['end_time'] > 0) {
++                    $data['end_time'] = date('Y-m-d', $data['end_time']);
++                } else {
++                    $data['end_time'] = '';
++                }
++            }
++        } elseif ($this->request->isPost()) {
++            if ($data['cases_id'] == '') {
++                $this->error('请选择该事件所属案件！');
++            }
++            if (!isset($data['id'])) {
++                $data['add_time'] = time();
++                $data['add_uid']  = session('user.id');
++            }
++            if (isset($data['start_time'])) {
++                $data['start_time'] = strtotime($data['start_time']);
++            }
++            if (isset($data['end_time'])) {
++                $data['end_time']   = strtotime($data['end_time']);
++            }
++        }
++    }
++
++    /**
++     * 表单结果处理
++     * @param boolean $result
++     */
++    protected function _form_result($result)
++    {
++        if ($result && $this->request->isPost()) {
++            $this->success('保存事件成功！', 'javascript:history.back()');
++        }
++    }
++
++    /**
++     * 结案
++     */
++    public function close_case()
++    {
++        $this->_save($this->table, ['status' => '1', 'end_time' => time()]);
++    }
++
++
++
++    /**
++     * 删除商品
++     */
++    public function del()
++    {
++        $this->_delete($this->table);
++    }
++
++    function _sendOCR()
++    {
++
++        require_once './baidu_ocr/AipOcr.php';
++        // 你的 百度APPID AK SK
++        $APP_ID = '15984790';
++        $API_KEY = 'pGeyGNXvZI4DYR0MBakXG4t5';
++        $SECRET_KEY = 'taDRNG17SgriApUDlghPTsj7KPRhGXEX';
++
++        $client = new \AipOcr($APP_ID, $API_KEY, $SECRET_KEY);
++
++        $img_url = $this->request->post('img_url', '');
++        //$image = file_get_contents('http://obj.qinlemon.com/car_manage/timg1.jpg');
++        $image = @file_get_contents($img_url);
++
++        // 调用通用文字识别, 图片参数为本地图片
++        $client->basicGeneral($image);
++
++        // 如果有可选参数
++        $options = array();
++        $options["language_type"] = "CHN_ENG";
++        $options["detect_direction"] = "true";
++        $options["detect_language"] = "true";
++        $options["probability"] = "true";
++
++        // 带参数调用通用文字识别, 图片参数为本地图片
++        $res = $client->basicGeneral($image, $options);
++
++        if (isset($res['words_result']) && count($res['words_result']) > 0) {
++            echo json_encode(['code' => 0, 'msg' => $res['words_result'][0]['words']]);
++        } else if (isset($res['error_code'])){
++            echo json_encode(['code' => 1, 'msg' => $res['error_code']]);
++        } else {
++            echo json_encode(['code' => 0, 'msg' => '']);
++        }
++        exit;
++
++    }
++
++
++
++}
+\ No newline at end of file
+Index: vendor/composer/autoload_classmap.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- vendor/composer/autoload_classmap.php	(revision 30f2eb108219bf6cd246065ac3cf07986093e51d)
++++ vendor/composer/autoload_classmap.php	(revision )
+@@ -6,234 +6,6 @@
+ $baseDir = dirname($vendorDir);
+ 
+ return array(
+-    'AliPay\\App' => $vendorDir . '/zoujingli/wechat-developer/AliPay/App.php',
+-    'AliPay\\Bill' => $vendorDir . '/zoujingli/wechat-developer/AliPay/Bill.php',
+-    'AliPay\\Pos' => $vendorDir . '/zoujingli/wechat-developer/AliPay/Pos.php',
+-    'AliPay\\Scan' => $vendorDir . '/zoujingli/wechat-developer/AliPay/Scan.php',
+-    'AliPay\\Transfer' => $vendorDir . '/zoujingli/wechat-developer/AliPay/Transfer.php',
+-    'AliPay\\Wap' => $vendorDir . '/zoujingli/wechat-developer/AliPay/Wap.php',
+-    'AliPay\\Web' => $vendorDir . '/zoujingli/wechat-developer/AliPay/Web.php',
+-    'Endroid\\QrCode\\Bundle\\Controller\\QrCodeController' => $vendorDir . '/endroid/qr-code/src/Bundle/Controller/QrCodeController.php',
+-    'Endroid\\QrCode\\Bundle\\DependencyInjection\\Configuration' => $vendorDir . '/endroid/qr-code/src/Bundle/DependencyInjection/Configuration.php',
+-    'Endroid\\QrCode\\Bundle\\DependencyInjection\\EndroidQrCodeExtension' => $vendorDir . '/endroid/qr-code/src/Bundle/DependencyInjection/EndroidQrCodeExtension.php',
+-    'Endroid\\QrCode\\Bundle\\EndroidQrCodeBundle' => $vendorDir . '/endroid/qr-code/src/Bundle/EndroidQrCodeBundle.php',
+-    'Endroid\\QrCode\\Bundle\\Twig\\Extension\\QrCodeExtension' => $vendorDir . '/endroid/qr-code/src/Bundle/Twig/Extension/QrCodeExtension.php',
+-    'Endroid\\QrCode\\Exceptions\\DataDoesntExistsException' => $vendorDir . '/endroid/qr-code/src/Exceptions/DataDoesntExistsException.php',
+-    'Endroid\\QrCode\\Exceptions\\FreeTypeLibraryMissingException' => $vendorDir . '/endroid/qr-code/src/Exceptions/FreeTypeLibraryMissingException.php',
+-    'Endroid\\QrCode\\Exceptions\\ImageFunctionFailedException' => $vendorDir . '/endroid/qr-code/src/Exceptions/ImageFunctionFailedException.php',
+-    'Endroid\\QrCode\\Exceptions\\ImageFunctionUnknownException' => $vendorDir . '/endroid/qr-code/src/Exceptions/ImageFunctionUnknownException.php',
+-    'Endroid\\QrCode\\Exceptions\\ImageSizeTooLargeException' => $vendorDir . '/endroid/qr-code/src/Exceptions/ImageSizeTooLargeException.php',
+-    'Endroid\\QrCode\\Exceptions\\ImageTypeInvalidException' => $vendorDir . '/endroid/qr-code/src/Exceptions/ImageTypeInvalidException.php',
+-    'Endroid\\QrCode\\Exceptions\\VersionTooLargeException' => $vendorDir . '/endroid/qr-code/src/Exceptions/VersionTooLargeException.php',
+-    'Endroid\\QrCode\\Factory\\QrCodeFactory' => $vendorDir . '/endroid/qr-code/src/Factory/QrCodeFactory.php',
+-    'Endroid\\QrCode\\QrCode' => $vendorDir . '/endroid/qr-code/src/QrCode.php',
+     'Ip2Region' => $vendorDir . '/zoujingli/ip2region/Ip2Region.php',
+-    'OSS\\Core\\MimeTypes' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Core/MimeTypes.php',
+-    'OSS\\Core\\OssException' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Core/OssException.php',
+-    'OSS\\Core\\OssUtil' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Core/OssUtil.php',
+-    'OSS\\Http\\RequestCore' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Http/RequestCore.php',
+-    'OSS\\Http\\RequestCore_Exception' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Http/RequestCore_Exception.php',
+-    'OSS\\Http\\ResponseCore' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Http/ResponseCore.php',
+-    'OSS\\Model\\BucketInfo' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/BucketInfo.php',
+-    'OSS\\Model\\BucketListInfo' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/BucketListInfo.php',
+-    'OSS\\Model\\CnameConfig' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/CnameConfig.php',
+-    'OSS\\Model\\CorsConfig' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/CorsConfig.php',
+-    'OSS\\Model\\CorsRule' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/CorsRule.php',
+-    'OSS\\Model\\GetLiveChannelHistory' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/GetLiveChannelHistory.php',
+-    'OSS\\Model\\GetLiveChannelInfo' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/GetLiveChannelInfo.php',
+-    'OSS\\Model\\GetLiveChannelStatus' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/GetLiveChannelStatus.php',
+-    'OSS\\Model\\LifecycleAction' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/LifecycleAction.php',
+-    'OSS\\Model\\LifecycleConfig' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/LifecycleConfig.php',
+-    'OSS\\Model\\LifecycleRule' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/LifecycleRule.php',
+-    'OSS\\Model\\ListMultipartUploadInfo' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/ListMultipartUploadInfo.php',
+-    'OSS\\Model\\ListPartsInfo' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/ListPartsInfo.php',
+-    'OSS\\Model\\LiveChannelConfig' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/LiveChannelConfig.php',
+-    'OSS\\Model\\LiveChannelHistory' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/LiveChannelHistory.php',
+-    'OSS\\Model\\LiveChannelInfo' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/LiveChannelInfo.php',
+-    'OSS\\Model\\LiveChannelListInfo' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/LiveChannelListInfo.php',
+-    'OSS\\Model\\LoggingConfig' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/LoggingConfig.php',
+-    'OSS\\Model\\ObjectInfo' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/ObjectInfo.php',
+-    'OSS\\Model\\ObjectListInfo' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/ObjectListInfo.php',
+-    'OSS\\Model\\PartInfo' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/PartInfo.php',
+-    'OSS\\Model\\PrefixInfo' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/PrefixInfo.php',
+-    'OSS\\Model\\RefererConfig' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/RefererConfig.php',
+-    'OSS\\Model\\StorageCapacityConfig' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/StorageCapacityConfig.php',
+-    'OSS\\Model\\UploadInfo' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/UploadInfo.php',
+-    'OSS\\Model\\WebsiteConfig' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/WebsiteConfig.php',
+-    'OSS\\Model\\XmlConfig' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Model/XmlConfig.php',
+-    'OSS\\OssClient' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/OssClient.php',
+-    'OSS\\Result\\AclResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/AclResult.php',
+-    'OSS\\Result\\AppendResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/AppendResult.php',
+-    'OSS\\Result\\BodyResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/BodyResult.php',
+-    'OSS\\Result\\CallbackResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/CallbackResult.php',
+-    'OSS\\Result\\CopyObjectResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/CopyObjectResult.php',
+-    'OSS\\Result\\DeleteObjectsResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/DeleteObjectsResult.php',
+-    'OSS\\Result\\ExistResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/ExistResult.php',
+-    'OSS\\Result\\GetCnameResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetCnameResult.php',
+-    'OSS\\Result\\GetCorsResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetCorsResult.php',
+-    'OSS\\Result\\GetLifecycleResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetLifecycleResult.php',
+-    'OSS\\Result\\GetLiveChannelHistoryResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetLiveChannelHistoryResult.php',
+-    'OSS\\Result\\GetLiveChannelInfoResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetLiveChannelInfoResult.php',
+-    'OSS\\Result\\GetLiveChannelStatusResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetLiveChannelStatusResult.php',
+-    'OSS\\Result\\GetLocationResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetLocationResult.php',
+-    'OSS\\Result\\GetLoggingResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetLoggingResult.php',
+-    'OSS\\Result\\GetRefererResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetRefererResult.php',
+-    'OSS\\Result\\GetStorageCapacityResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetStorageCapacityResult.php',
+-    'OSS\\Result\\GetWebsiteResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetWebsiteResult.php',
+-    'OSS\\Result\\HeaderResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/HeaderResult.php',
+-    'OSS\\Result\\InitiateMultipartUploadResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/InitiateMultipartUploadResult.php',
+-    'OSS\\Result\\ListBucketsResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/ListBucketsResult.php',
+-    'OSS\\Result\\ListLiveChannelResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/ListLiveChannelResult.php',
+-    'OSS\\Result\\ListMultipartUploadResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/ListMultipartUploadResult.php',
+-    'OSS\\Result\\ListObjectsResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/ListObjectsResult.php',
+-    'OSS\\Result\\ListPartsResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/ListPartsResult.php',
+-    'OSS\\Result\\PutLiveChannelResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/PutLiveChannelResult.php',
+-    'OSS\\Result\\PutSetDeleteResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/PutSetDeleteResult.php',
+-    'OSS\\Result\\Result' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/Result.php',
+-    'OSS\\Result\\SymlinkResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/SymlinkResult.php',
+-    'OSS\\Result\\UploadPartResult' => $vendorDir . '/aliyuncs/oss-sdk-php/src/OSS/Result/UploadPartResult.php',
+-    'Qiniu\\Auth' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Auth.php',
+-    'Qiniu\\Cdn\\CdnManager' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Cdn/CdnManager.php',
+-    'Qiniu\\Config' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Config.php',
+-    'Qiniu\\Etag' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Etag.php',
+-    'Qiniu\\Http\\Client' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Http/Client.php',
+-    'Qiniu\\Http\\Error' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Http/Error.php',
+-    'Qiniu\\Http\\Request' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Http/Request.php',
+-    'Qiniu\\Http\\Response' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Http/Response.php',
+-    'Qiniu\\Processing\\ImageUrlBuilder' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Processing/ImageUrlBuilder.php',
+-    'Qiniu\\Processing\\Operation' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Processing/Operation.php',
+-    'Qiniu\\Processing\\PersistentFop' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Processing/PersistentFop.php',
+-    'Qiniu\\Rtc\\AppClient' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Rtc/AppClient.php',
+-    'Qiniu\\Storage\\ArgusManager' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Storage/ArgusManager.php',
+-    'Qiniu\\Storage\\BucketManager' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Storage/BucketManager.php',
+-    'Qiniu\\Storage\\FormUploader' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Storage/FormUploader.php',
+-    'Qiniu\\Storage\\ResumeUploader' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Storage/ResumeUploader.php',
+-    'Qiniu\\Storage\\UploadManager' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Storage/UploadManager.php',
+-    'Qiniu\\Zone' => $vendorDir . '/qiniu/php-sdk/src/Qiniu/Zone.php',
+-    'Symfony\\Component\\OptionsResolver\\Debug\\OptionsResolverIntrospector' => $vendorDir . '/symfony/options-resolver/Debug/OptionsResolverIntrospector.php',
+-    'Symfony\\Component\\OptionsResolver\\Exception\\AccessException' => $vendorDir . '/symfony/options-resolver/Exception/AccessException.php',
+-    'Symfony\\Component\\OptionsResolver\\Exception\\ExceptionInterface' => $vendorDir . '/symfony/options-resolver/Exception/ExceptionInterface.php',
+-    'Symfony\\Component\\OptionsResolver\\Exception\\InvalidArgumentException' => $vendorDir . '/symfony/options-resolver/Exception/InvalidArgumentException.php',
+-    'Symfony\\Component\\OptionsResolver\\Exception\\InvalidOptionsException' => $vendorDir . '/symfony/options-resolver/Exception/InvalidOptionsException.php',
+-    'Symfony\\Component\\OptionsResolver\\Exception\\MissingOptionsException' => $vendorDir . '/symfony/options-resolver/Exception/MissingOptionsException.php',
+-    'Symfony\\Component\\OptionsResolver\\Exception\\NoConfigurationException' => $vendorDir . '/symfony/options-resolver/Exception/NoConfigurationException.php',
+-    'Symfony\\Component\\OptionsResolver\\Exception\\NoSuchOptionException' => $vendorDir . '/symfony/options-resolver/Exception/NoSuchOptionException.php',
+-    'Symfony\\Component\\OptionsResolver\\Exception\\OptionDefinitionException' => $vendorDir . '/symfony/options-resolver/Exception/OptionDefinitionException.php',
+-    'Symfony\\Component\\OptionsResolver\\Exception\\UndefinedOptionsException' => $vendorDir . '/symfony/options-resolver/Exception/UndefinedOptionsException.php',
+-    'Symfony\\Component\\OptionsResolver\\Options' => $vendorDir . '/symfony/options-resolver/Options.php',
+-    'Symfony\\Component\\OptionsResolver\\OptionsResolver' => $vendorDir . '/symfony/options-resolver/OptionsResolver.php',
+     'We' => $vendorDir . '/zoujingli/wechat-developer/We.php',
+-    'WeChat\\Bind' => $vendorDir . '/zoujingli/weopen-developer/WeChat/Bind.php',
+-    'WeChat\\Card' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Card.php',
+-    'WeChat\\Contracts\\BasicAliPay' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Contracts/BasicAliPay.php',
+-    'WeChat\\Contracts\\BasicPushEvent' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Contracts/BasicPushEvent.php',
+-    'WeChat\\Contracts\\BasicWeChat' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Contracts/BasicWeChat.php',
+-    'WeChat\\Contracts\\BasicWePay' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Contracts/BasicWePay.php',
+-    'WeChat\\Contracts\\DataArray' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Contracts/DataArray.php',
+-    'WeChat\\Contracts\\DataError' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Contracts/DataError.php',
+-    'WeChat\\Contracts\\MyCurlFile' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Contracts/MyCurlFile.php',
+-    'WeChat\\Contracts\\Tools' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Contracts/Tools.php',
+-    'WeChat\\Custom' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Custom.php',
+-    'WeChat\\Exceptions\\InvalidArgumentException' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Exceptions/InvalidArgumentException.php',
+-    'WeChat\\Exceptions\\InvalidDecryptException' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Exceptions/InvalidDecryptException.php',
+-    'WeChat\\Exceptions\\InvalidInstanceException' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Exceptions/InvalidInstanceException.php',
+-    'WeChat\\Exceptions\\InvalidResponseException' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Exceptions/InvalidResponseException.php',
+-    'WeChat\\Exceptions\\LocalCacheException' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Exceptions/LocalCacheException.php',
+-    'WeChat\\Limit' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Limit.php',
+-    'WeChat\\Media' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Media.php',
+-    'WeChat\\Menu' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Menu.php',
+-    'WeChat\\Mini' => $vendorDir . '/zoujingli/weopen-developer/WeChat/Mini.php',
+-    'WeChat\\Oauth' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Oauth.php',
+-    'WeChat\\Pay' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Pay.php',
+-    'WeChat\\Product' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Product.php',
+-    'WeChat\\Qrcode' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Qrcode.php',
+-    'WeChat\\Receive' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Receive.php',
+-    'WeChat\\Scan' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Scan.php',
+-    'WeChat\\Script' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Script.php',
+-    'WeChat\\Shake' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Shake.php',
+-    'WeChat\\Tags' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Tags.php',
+-    'WeChat\\Template' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Template.php',
+-    'WeChat\\User' => $vendorDir . '/zoujingli/wechat-developer/WeChat/User.php',
+-    'WeChat\\Wifi' => $vendorDir . '/zoujingli/wechat-developer/WeChat/Wifi.php',
+-    'WeMini\\Account' => $vendorDir . '/zoujingli/weopen-developer/WeMini/Account.php',
+-    'WeMini\\Basic' => $vendorDir . '/zoujingli/weopen-developer/WeMini/Basic.php',
+-    'WeMini\\Code' => $vendorDir . '/zoujingli/weopen-developer/WeMini/Code.php',
+-    'WeMini\\Crypt' => $vendorDir . '/zoujingli/wechat-developer/WeMini/Crypt.php',
+-    'WeMini\\Domain' => $vendorDir . '/zoujingli/weopen-developer/WeMini/Domain.php',
+-    'WeMini\\Plugs' => $vendorDir . '/zoujingli/wechat-developer/WeMini/Plugs.php',
+-    'WeMini\\Poi' => $vendorDir . '/zoujingli/wechat-developer/WeMini/Poi.php',
+-    'WeMini\\Qrcode' => $vendorDir . '/zoujingli/wechat-developer/WeMini/Qrcode.php',
+-    'WeMini\\Template' => $vendorDir . '/zoujingli/wechat-developer/WeMini/Template.php',
+-    'WeMini\\Tester' => $vendorDir . '/zoujingli/weopen-developer/WeMini/Tester.php',
+-    'WeMini\\Total' => $vendorDir . '/zoujingli/wechat-developer/WeMini/Total.php',
+-    'WeMini\\User' => $vendorDir . '/zoujingli/weopen-developer/WeMini/User.php',
+-    'WeOpen\\Login' => $vendorDir . '/zoujingli/weopen-developer/WeOpen/Login.php',
+-    'WeOpen\\MiniApp' => $vendorDir . '/zoujingli/weopen-developer/WeOpen/MiniApp.php',
+-    'WeOpen\\Service' => $vendorDir . '/zoujingli/weopen-developer/WeOpen/Service.php',
+-    'WePay\\Bill' => $vendorDir . '/zoujingli/wechat-developer/WePay/Bill.php',
+-    'WePay\\Coupon' => $vendorDir . '/zoujingli/wechat-developer/WePay/Coupon.php',
+-    'WePay\\Order' => $vendorDir . '/zoujingli/wechat-developer/WePay/Order.php',
+-    'WePay\\Redpack' => $vendorDir . '/zoujingli/wechat-developer/WePay/Redpack.php',
+-    'WePay\\Refund' => $vendorDir . '/zoujingli/wechat-developer/WePay/Refund.php',
+-    'WePay\\Transfers' => $vendorDir . '/zoujingli/wechat-developer/WePay/Transfers.php',
+-    'WePay\\TransfersBank' => $vendorDir . '/zoujingli/wechat-developer/WePay/TransfersBank.php',
+-    'library\\Controller' => $vendorDir . '/zoujingli/think-library/src/Controller.php',
+-    'library\\File' => $vendorDir . '/zoujingli/think-library/src/File.php',
+-    'library\\command\\Sess' => $vendorDir . '/zoujingli/think-library/src/command/Sess.php',
+-    'library\\command\\Sync' => $vendorDir . '/zoujingli/think-library/src/command/Sync.php',
+-    'library\\command\\Task' => $vendorDir . '/zoujingli/think-library/src/command/Task.php',
+-    'library\\command\\sync\\Admin' => $vendorDir . '/zoujingli/think-library/src/command/sync/Admin.php',
+-    'library\\command\\sync\\Config' => $vendorDir . '/zoujingli/think-library/src/command/sync/Config.php',
+-    'library\\command\\sync\\Plugs' => $vendorDir . '/zoujingli/think-library/src/command/sync/Plugs.php',
+-    'library\\command\\sync\\Service' => $vendorDir . '/zoujingli/think-library/src/command/sync/Service.php',
+-    'library\\command\\sync\\Wechat' => $vendorDir . '/zoujingli/think-library/src/command/sync/Wechat.php',
+-    'library\\command\\task\\Reset' => $vendorDir . '/zoujingli/think-library/src/command/task/Reset.php',
+-    'library\\command\\task\\Start' => $vendorDir . '/zoujingli/think-library/src/command/task/Start.php',
+-    'library\\command\\task\\State' => $vendorDir . '/zoujingli/think-library/src/command/task/State.php',
+-    'library\\command\\task\\Stop' => $vendorDir . '/zoujingli/think-library/src/command/task/Stop.php',
+-    'library\\driver\\Local' => $vendorDir . '/zoujingli/think-library/src/driver/Local.php',
+-    'library\\driver\\Oss' => $vendorDir . '/zoujingli/think-library/src/driver/Oss.php',
+-    'library\\driver\\Qiniu' => $vendorDir . '/zoujingli/think-library/src/driver/Qiniu.php',
+-    'library\\logic\\Delete' => $vendorDir . '/zoujingli/think-library/src/logic/Delete.php',
+-    'library\\logic\\Form' => $vendorDir . '/zoujingli/think-library/src/logic/Form.php',
+-    'library\\logic\\Input' => $vendorDir . '/zoujingli/think-library/src/logic/Input.php',
+-    'library\\logic\\Logic' => $vendorDir . '/zoujingli/think-library/src/logic/Logic.php',
+-    'library\\logic\\Page' => $vendorDir . '/zoujingli/think-library/src/logic/Page.php',
+-    'library\\logic\\Query' => $vendorDir . '/zoujingli/think-library/src/logic/Query.php',
+-    'library\\logic\\Save' => $vendorDir . '/zoujingli/think-library/src/logic/Save.php',
+-    'library\\tools\\Cors' => $vendorDir . '/zoujingli/think-library/src/tools/Cors.php',
+-    'library\\tools\\Crypt' => $vendorDir . '/zoujingli/think-library/src/tools/Crypt.php',
+-    'library\\tools\\Csrf' => $vendorDir . '/zoujingli/think-library/src/tools/Csrf.php',
+-    'library\\tools\\Csv' => $vendorDir . '/zoujingli/think-library/src/tools/Csv.php',
+-    'library\\tools\\Data' => $vendorDir . '/zoujingli/think-library/src/tools/Data.php',
+-    'library\\tools\\Express' => $vendorDir . '/zoujingli/think-library/src/tools/Express.php',
+-    'library\\tools\\Http' => $vendorDir . '/zoujingli/think-library/src/tools/Http.php',
+-    'library\\tools\\Node' => $vendorDir . '/zoujingli/think-library/src/tools/Node.php',
+-    'library\\tools\\Options' => $vendorDir . '/zoujingli/think-library/src/tools/Options.php',
+-    'think\\Queue' => $vendorDir . '/topthink/think-queue/src/Queue.php',
+-    'think\\composer\\Plugin' => $vendorDir . '/topthink/think-installer/src/Plugin.php',
+-    'think\\composer\\ThinkExtend' => $vendorDir . '/topthink/think-installer/src/ThinkExtend.php',
+-    'think\\composer\\ThinkFramework' => $vendorDir . '/topthink/think-installer/src/ThinkFramework.php',
+-    'think\\composer\\ThinkTesting' => $vendorDir . '/topthink/think-installer/src/ThinkTesting.php',
+-    'think\\helper\\Arr' => $vendorDir . '/topthink/think-helper/src/Arr.php',
+-    'think\\helper\\Str' => $vendorDir . '/topthink/think-helper/src/Str.php',
+-    'think\\queue\\CallQueuedHandler' => $vendorDir . '/topthink/think-queue/src/queue/CallQueuedHandler.php',
+-    'think\\queue\\Connector' => $vendorDir . '/topthink/think-queue/src/queue/Connector.php',
+-    'think\\queue\\Job' => $vendorDir . '/topthink/think-queue/src/queue/Job.php',
+-    'think\\queue\\Listener' => $vendorDir . '/topthink/think-queue/src/queue/Listener.php',
+-    'think\\queue\\Queueable' => $vendorDir . '/topthink/think-queue/src/queue/Queueable.php',
+-    'think\\queue\\ShouldQueue' => $vendorDir . '/topthink/think-queue/src/queue/ShouldQueue.php',
+-    'think\\queue\\Worker' => $vendorDir . '/topthink/think-queue/src/queue/Worker.php',
+-    'think\\queue\\command\\Listen' => $vendorDir . '/topthink/think-queue/src/queue/command/Listen.php',
+-    'think\\queue\\command\\Restart' => $vendorDir . '/topthink/think-queue/src/queue/command/Restart.php',
+-    'think\\queue\\command\\Subscribe' => $vendorDir . '/topthink/think-queue/src/queue/command/Subscribe.php',
+-    'think\\queue\\command\\Work' => $vendorDir . '/topthink/think-queue/src/queue/command/Work.php',
+-    'think\\queue\\connector\\Database' => $vendorDir . '/topthink/think-queue/src/queue/connector/Database.php',
+-    'think\\queue\\connector\\Redis' => $vendorDir . '/topthink/think-queue/src/queue/connector/Redis.php',
+-    'think\\queue\\connector\\Sync' => $vendorDir . '/topthink/think-queue/src/queue/connector/Sync.php',
+-    'think\\queue\\connector\\Topthink' => $vendorDir . '/topthink/think-queue/src/queue/connector/Topthink.php',
+-    'think\\queue\\job\\Database' => $vendorDir . '/topthink/think-queue/src/queue/job/Database.php',
+-    'think\\queue\\job\\Redis' => $vendorDir . '/topthink/think-queue/src/queue/job/Redis.php',
+-    'think\\queue\\job\\Sync' => $vendorDir . '/topthink/think-queue/src/queue/job/Sync.php',
+-    'think\\queue\\job\\Topthink' => $vendorDir . '/topthink/think-queue/src/queue/job/Topthink.php',
+ );
+Index: vendor/composer/autoload_static.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- vendor/composer/autoload_static.php	(revision 30f2eb108219bf6cd246065ac3cf07986093e51d)
++++ vendor/composer/autoload_static.php	(revision )
+@@ -11,6 +11,7 @@
+         '9b552a3cc426e3287cc811caefa3cf53' => __DIR__ . '/..' . '/topthink/think-helper/src/helper.php',
+         'cc56288302d9df745d97c934d6a6e5f0' => __DIR__ . '/..' . '/topthink/think-queue/src/common.php',
+         '6bfa2db14bcd36db12d0b2121e50b8f2' => __DIR__ . '/..' . '/zoujingli/think-library/common.php',
++        '1cfd2761b63b0a29ed23657ea394cb2d' => __DIR__ . '/..' . '/topthink/think-captcha/src/helper.php',
+     );
+ 
+     public static $prefixLengthsPsr4 = array (
+@@ -18,6 +19,7 @@
+         array (
+             'think\\helper\\' => 13,
+             'think\\composer\\' => 15,
++            'think\\captcha\\' => 14,
+             'think\\' => 6,
+         ),
+         'l' => 
+@@ -62,6 +64,10 @@
+         array (
+             0 => __DIR__ . '/..' . '/topthink/think-installer/src',
+         ),
++        'think\\captcha\\' => 
++        array (
++            0 => __DIR__ . '/..' . '/topthink/think-captcha/src',
++        ),
+         'think\\' => 
+         array (
+             0 => __DIR__ . '/..' . '/topthink/think-queue/src',
+@@ -111,236 +117,8 @@
+     );
+ 
+     public static $classMap = array (
+-        'AliPay\\App' => __DIR__ . '/..' . '/zoujingli/wechat-developer/AliPay/App.php',
+-        'AliPay\\Bill' => __DIR__ . '/..' . '/zoujingli/wechat-developer/AliPay/Bill.php',
+-        'AliPay\\Pos' => __DIR__ . '/..' . '/zoujingli/wechat-developer/AliPay/Pos.php',
+-        'AliPay\\Scan' => __DIR__ . '/..' . '/zoujingli/wechat-developer/AliPay/Scan.php',
+-        'AliPay\\Transfer' => __DIR__ . '/..' . '/zoujingli/wechat-developer/AliPay/Transfer.php',
+-        'AliPay\\Wap' => __DIR__ . '/..' . '/zoujingli/wechat-developer/AliPay/Wap.php',
+-        'AliPay\\Web' => __DIR__ . '/..' . '/zoujingli/wechat-developer/AliPay/Web.php',
+-        'Endroid\\QrCode\\Bundle\\Controller\\QrCodeController' => __DIR__ . '/..' . '/endroid/qr-code/src/Bundle/Controller/QrCodeController.php',
+-        'Endroid\\QrCode\\Bundle\\DependencyInjection\\Configuration' => __DIR__ . '/..' . '/endroid/qr-code/src/Bundle/DependencyInjection/Configuration.php',
+-        'Endroid\\QrCode\\Bundle\\DependencyInjection\\EndroidQrCodeExtension' => __DIR__ . '/..' . '/endroid/qr-code/src/Bundle/DependencyInjection/EndroidQrCodeExtension.php',
+-        'Endroid\\QrCode\\Bundle\\EndroidQrCodeBundle' => __DIR__ . '/..' . '/endroid/qr-code/src/Bundle/EndroidQrCodeBundle.php',
+-        'Endroid\\QrCode\\Bundle\\Twig\\Extension\\QrCodeExtension' => __DIR__ . '/..' . '/endroid/qr-code/src/Bundle/Twig/Extension/QrCodeExtension.php',
+-        'Endroid\\QrCode\\Exceptions\\DataDoesntExistsException' => __DIR__ . '/..' . '/endroid/qr-code/src/Exceptions/DataDoesntExistsException.php',
+-        'Endroid\\QrCode\\Exceptions\\FreeTypeLibraryMissingException' => __DIR__ . '/..' . '/endroid/qr-code/src/Exceptions/FreeTypeLibraryMissingException.php',
+-        'Endroid\\QrCode\\Exceptions\\ImageFunctionFailedException' => __DIR__ . '/..' . '/endroid/qr-code/src/Exceptions/ImageFunctionFailedException.php',
+-        'Endroid\\QrCode\\Exceptions\\ImageFunctionUnknownException' => __DIR__ . '/..' . '/endroid/qr-code/src/Exceptions/ImageFunctionUnknownException.php',
+-        'Endroid\\QrCode\\Exceptions\\ImageSizeTooLargeException' => __DIR__ . '/..' . '/endroid/qr-code/src/Exceptions/ImageSizeTooLargeException.php',
+-        'Endroid\\QrCode\\Exceptions\\ImageTypeInvalidException' => __DIR__ . '/..' . '/endroid/qr-code/src/Exceptions/ImageTypeInvalidException.php',
+-        'Endroid\\QrCode\\Exceptions\\VersionTooLargeException' => __DIR__ . '/..' . '/endroid/qr-code/src/Exceptions/VersionTooLargeException.php',
+-        'Endroid\\QrCode\\Factory\\QrCodeFactory' => __DIR__ . '/..' . '/endroid/qr-code/src/Factory/QrCodeFactory.php',
+-        'Endroid\\QrCode\\QrCode' => __DIR__ . '/..' . '/endroid/qr-code/src/QrCode.php',
+         'Ip2Region' => __DIR__ . '/..' . '/zoujingli/ip2region/Ip2Region.php',
+-        'OSS\\Core\\MimeTypes' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Core/MimeTypes.php',
+-        'OSS\\Core\\OssException' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Core/OssException.php',
+-        'OSS\\Core\\OssUtil' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Core/OssUtil.php',
+-        'OSS\\Http\\RequestCore' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Http/RequestCore.php',
+-        'OSS\\Http\\RequestCore_Exception' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Http/RequestCore_Exception.php',
+-        'OSS\\Http\\ResponseCore' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Http/ResponseCore.php',
+-        'OSS\\Model\\BucketInfo' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/BucketInfo.php',
+-        'OSS\\Model\\BucketListInfo' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/BucketListInfo.php',
+-        'OSS\\Model\\CnameConfig' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/CnameConfig.php',
+-        'OSS\\Model\\CorsConfig' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/CorsConfig.php',
+-        'OSS\\Model\\CorsRule' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/CorsRule.php',
+-        'OSS\\Model\\GetLiveChannelHistory' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/GetLiveChannelHistory.php',
+-        'OSS\\Model\\GetLiveChannelInfo' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/GetLiveChannelInfo.php',
+-        'OSS\\Model\\GetLiveChannelStatus' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/GetLiveChannelStatus.php',
+-        'OSS\\Model\\LifecycleAction' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/LifecycleAction.php',
+-        'OSS\\Model\\LifecycleConfig' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/LifecycleConfig.php',
+-        'OSS\\Model\\LifecycleRule' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/LifecycleRule.php',
+-        'OSS\\Model\\ListMultipartUploadInfo' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/ListMultipartUploadInfo.php',
+-        'OSS\\Model\\ListPartsInfo' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/ListPartsInfo.php',
+-        'OSS\\Model\\LiveChannelConfig' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/LiveChannelConfig.php',
+-        'OSS\\Model\\LiveChannelHistory' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/LiveChannelHistory.php',
+-        'OSS\\Model\\LiveChannelInfo' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/LiveChannelInfo.php',
+-        'OSS\\Model\\LiveChannelListInfo' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/LiveChannelListInfo.php',
+-        'OSS\\Model\\LoggingConfig' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/LoggingConfig.php',
+-        'OSS\\Model\\ObjectInfo' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/ObjectInfo.php',
+-        'OSS\\Model\\ObjectListInfo' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/ObjectListInfo.php',
+-        'OSS\\Model\\PartInfo' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/PartInfo.php',
+-        'OSS\\Model\\PrefixInfo' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/PrefixInfo.php',
+-        'OSS\\Model\\RefererConfig' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/RefererConfig.php',
+-        'OSS\\Model\\StorageCapacityConfig' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/StorageCapacityConfig.php',
+-        'OSS\\Model\\UploadInfo' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/UploadInfo.php',
+-        'OSS\\Model\\WebsiteConfig' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/WebsiteConfig.php',
+-        'OSS\\Model\\XmlConfig' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Model/XmlConfig.php',
+-        'OSS\\OssClient' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/OssClient.php',
+-        'OSS\\Result\\AclResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/AclResult.php',
+-        'OSS\\Result\\AppendResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/AppendResult.php',
+-        'OSS\\Result\\BodyResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/BodyResult.php',
+-        'OSS\\Result\\CallbackResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/CallbackResult.php',
+-        'OSS\\Result\\CopyObjectResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/CopyObjectResult.php',
+-        'OSS\\Result\\DeleteObjectsResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/DeleteObjectsResult.php',
+-        'OSS\\Result\\ExistResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/ExistResult.php',
+-        'OSS\\Result\\GetCnameResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetCnameResult.php',
+-        'OSS\\Result\\GetCorsResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetCorsResult.php',
+-        'OSS\\Result\\GetLifecycleResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetLifecycleResult.php',
+-        'OSS\\Result\\GetLiveChannelHistoryResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetLiveChannelHistoryResult.php',
+-        'OSS\\Result\\GetLiveChannelInfoResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetLiveChannelInfoResult.php',
+-        'OSS\\Result\\GetLiveChannelStatusResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetLiveChannelStatusResult.php',
+-        'OSS\\Result\\GetLocationResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetLocationResult.php',
+-        'OSS\\Result\\GetLoggingResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetLoggingResult.php',
+-        'OSS\\Result\\GetRefererResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetRefererResult.php',
+-        'OSS\\Result\\GetStorageCapacityResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetStorageCapacityResult.php',
+-        'OSS\\Result\\GetWebsiteResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/GetWebsiteResult.php',
+-        'OSS\\Result\\HeaderResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/HeaderResult.php',
+-        'OSS\\Result\\InitiateMultipartUploadResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/InitiateMultipartUploadResult.php',
+-        'OSS\\Result\\ListBucketsResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/ListBucketsResult.php',
+-        'OSS\\Result\\ListLiveChannelResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/ListLiveChannelResult.php',
+-        'OSS\\Result\\ListMultipartUploadResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/ListMultipartUploadResult.php',
+-        'OSS\\Result\\ListObjectsResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/ListObjectsResult.php',
+-        'OSS\\Result\\ListPartsResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/ListPartsResult.php',
+-        'OSS\\Result\\PutLiveChannelResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/PutLiveChannelResult.php',
+-        'OSS\\Result\\PutSetDeleteResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/PutSetDeleteResult.php',
+-        'OSS\\Result\\Result' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/Result.php',
+-        'OSS\\Result\\SymlinkResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/SymlinkResult.php',
+-        'OSS\\Result\\UploadPartResult' => __DIR__ . '/..' . '/aliyuncs/oss-sdk-php/src/OSS/Result/UploadPartResult.php',
+-        'Qiniu\\Auth' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Auth.php',
+-        'Qiniu\\Cdn\\CdnManager' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Cdn/CdnManager.php',
+-        'Qiniu\\Config' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Config.php',
+-        'Qiniu\\Etag' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Etag.php',
+-        'Qiniu\\Http\\Client' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Http/Client.php',
+-        'Qiniu\\Http\\Error' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Http/Error.php',
+-        'Qiniu\\Http\\Request' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Http/Request.php',
+-        'Qiniu\\Http\\Response' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Http/Response.php',
+-        'Qiniu\\Processing\\ImageUrlBuilder' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Processing/ImageUrlBuilder.php',
+-        'Qiniu\\Processing\\Operation' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Processing/Operation.php',
+-        'Qiniu\\Processing\\PersistentFop' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Processing/PersistentFop.php',
+-        'Qiniu\\Rtc\\AppClient' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Rtc/AppClient.php',
+-        'Qiniu\\Storage\\ArgusManager' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Storage/ArgusManager.php',
+-        'Qiniu\\Storage\\BucketManager' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Storage/BucketManager.php',
+-        'Qiniu\\Storage\\FormUploader' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Storage/FormUploader.php',
+-        'Qiniu\\Storage\\ResumeUploader' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Storage/ResumeUploader.php',
+-        'Qiniu\\Storage\\UploadManager' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Storage/UploadManager.php',
+-        'Qiniu\\Zone' => __DIR__ . '/..' . '/qiniu/php-sdk/src/Qiniu/Zone.php',
+-        'Symfony\\Component\\OptionsResolver\\Debug\\OptionsResolverIntrospector' => __DIR__ . '/..' . '/symfony/options-resolver/Debug/OptionsResolverIntrospector.php',
+-        'Symfony\\Component\\OptionsResolver\\Exception\\AccessException' => __DIR__ . '/..' . '/symfony/options-resolver/Exception/AccessException.php',
+-        'Symfony\\Component\\OptionsResolver\\Exception\\ExceptionInterface' => __DIR__ . '/..' . '/symfony/options-resolver/Exception/ExceptionInterface.php',
+-        'Symfony\\Component\\OptionsResolver\\Exception\\InvalidArgumentException' => __DIR__ . '/..' . '/symfony/options-resolver/Exception/InvalidArgumentException.php',
+-        'Symfony\\Component\\OptionsResolver\\Exception\\InvalidOptionsException' => __DIR__ . '/..' . '/symfony/options-resolver/Exception/InvalidOptionsException.php',
+-        'Symfony\\Component\\OptionsResolver\\Exception\\MissingOptionsException' => __DIR__ . '/..' . '/symfony/options-resolver/Exception/MissingOptionsException.php',
+-        'Symfony\\Component\\OptionsResolver\\Exception\\NoConfigurationException' => __DIR__ . '/..' . '/symfony/options-resolver/Exception/NoConfigurationException.php',
+-        'Symfony\\Component\\OptionsResolver\\Exception\\NoSuchOptionException' => __DIR__ . '/..' . '/symfony/options-resolver/Exception/NoSuchOptionException.php',
+-        'Symfony\\Component\\OptionsResolver\\Exception\\OptionDefinitionException' => __DIR__ . '/..' . '/symfony/options-resolver/Exception/OptionDefinitionException.php',
+-        'Symfony\\Component\\OptionsResolver\\Exception\\UndefinedOptionsException' => __DIR__ . '/..' . '/symfony/options-resolver/Exception/UndefinedOptionsException.php',
+-        'Symfony\\Component\\OptionsResolver\\Options' => __DIR__ . '/..' . '/symfony/options-resolver/Options.php',
+-        'Symfony\\Component\\OptionsResolver\\OptionsResolver' => __DIR__ . '/..' . '/symfony/options-resolver/OptionsResolver.php',
+         'We' => __DIR__ . '/..' . '/zoujingli/wechat-developer/We.php',
+-        'WeChat\\Bind' => __DIR__ . '/..' . '/zoujingli/weopen-developer/WeChat/Bind.php',
+-        'WeChat\\Card' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Card.php',
+-        'WeChat\\Contracts\\BasicAliPay' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Contracts/BasicAliPay.php',
+-        'WeChat\\Contracts\\BasicPushEvent' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Contracts/BasicPushEvent.php',
+-        'WeChat\\Contracts\\BasicWeChat' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Contracts/BasicWeChat.php',
+-        'WeChat\\Contracts\\BasicWePay' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Contracts/BasicWePay.php',
+-        'WeChat\\Contracts\\DataArray' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Contracts/DataArray.php',
+-        'WeChat\\Contracts\\DataError' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Contracts/DataError.php',
+-        'WeChat\\Contracts\\MyCurlFile' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Contracts/MyCurlFile.php',
+-        'WeChat\\Contracts\\Tools' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Contracts/Tools.php',
+-        'WeChat\\Custom' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Custom.php',
+-        'WeChat\\Exceptions\\InvalidArgumentException' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Exceptions/InvalidArgumentException.php',
+-        'WeChat\\Exceptions\\InvalidDecryptException' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Exceptions/InvalidDecryptException.php',
+-        'WeChat\\Exceptions\\InvalidInstanceException' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Exceptions/InvalidInstanceException.php',
+-        'WeChat\\Exceptions\\InvalidResponseException' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Exceptions/InvalidResponseException.php',
+-        'WeChat\\Exceptions\\LocalCacheException' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Exceptions/LocalCacheException.php',
+-        'WeChat\\Limit' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Limit.php',
+-        'WeChat\\Media' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Media.php',
+-        'WeChat\\Menu' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Menu.php',
+-        'WeChat\\Mini' => __DIR__ . '/..' . '/zoujingli/weopen-developer/WeChat/Mini.php',
+-        'WeChat\\Oauth' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Oauth.php',
+-        'WeChat\\Pay' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Pay.php',
+-        'WeChat\\Product' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Product.php',
+-        'WeChat\\Qrcode' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Qrcode.php',
+-        'WeChat\\Receive' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Receive.php',
+-        'WeChat\\Scan' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Scan.php',
+-        'WeChat\\Script' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Script.php',
+-        'WeChat\\Shake' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Shake.php',
+-        'WeChat\\Tags' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Tags.php',
+-        'WeChat\\Template' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Template.php',
+-        'WeChat\\User' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/User.php',
+-        'WeChat\\Wifi' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeChat/Wifi.php',
+-        'WeMini\\Account' => __DIR__ . '/..' . '/zoujingli/weopen-developer/WeMini/Account.php',
+-        'WeMini\\Basic' => __DIR__ . '/..' . '/zoujingli/weopen-developer/WeMini/Basic.php',
+-        'WeMini\\Code' => __DIR__ . '/..' . '/zoujingli/weopen-developer/WeMini/Code.php',
+-        'WeMini\\Crypt' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeMini/Crypt.php',
+-        'WeMini\\Domain' => __DIR__ . '/..' . '/zoujingli/weopen-developer/WeMini/Domain.php',
+-        'WeMini\\Plugs' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeMini/Plugs.php',
+-        'WeMini\\Poi' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeMini/Poi.php',
+-        'WeMini\\Qrcode' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeMini/Qrcode.php',
+-        'WeMini\\Template' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeMini/Template.php',
+-        'WeMini\\Tester' => __DIR__ . '/..' . '/zoujingli/weopen-developer/WeMini/Tester.php',
+-        'WeMini\\Total' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WeMini/Total.php',
+-        'WeMini\\User' => __DIR__ . '/..' . '/zoujingli/weopen-developer/WeMini/User.php',
+-        'WeOpen\\Login' => __DIR__ . '/..' . '/zoujingli/weopen-developer/WeOpen/Login.php',
+-        'WeOpen\\MiniApp' => __DIR__ . '/..' . '/zoujingli/weopen-developer/WeOpen/MiniApp.php',
+-        'WeOpen\\Service' => __DIR__ . '/..' . '/zoujingli/weopen-developer/WeOpen/Service.php',
+-        'WePay\\Bill' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WePay/Bill.php',
+-        'WePay\\Coupon' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WePay/Coupon.php',
+-        'WePay\\Order' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WePay/Order.php',
+-        'WePay\\Redpack' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WePay/Redpack.php',
+-        'WePay\\Refund' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WePay/Refund.php',
+-        'WePay\\Transfers' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WePay/Transfers.php',
+-        'WePay\\TransfersBank' => __DIR__ . '/..' . '/zoujingli/wechat-developer/WePay/TransfersBank.php',
+-        'library\\Controller' => __DIR__ . '/..' . '/zoujingli/think-library/src/Controller.php',
+-        'library\\File' => __DIR__ . '/..' . '/zoujingli/think-library/src/File.php',
+-        'library\\command\\Sess' => __DIR__ . '/..' . '/zoujingli/think-library/src/command/Sess.php',
+-        'library\\command\\Sync' => __DIR__ . '/..' . '/zoujingli/think-library/src/command/Sync.php',
+-        'library\\command\\Task' => __DIR__ . '/..' . '/zoujingli/think-library/src/command/Task.php',
+-        'library\\command\\sync\\Admin' => __DIR__ . '/..' . '/zoujingli/think-library/src/command/sync/Admin.php',
+-        'library\\command\\sync\\Config' => __DIR__ . '/..' . '/zoujingli/think-library/src/command/sync/Config.php',
+-        'library\\command\\sync\\Plugs' => __DIR__ . '/..' . '/zoujingli/think-library/src/command/sync/Plugs.php',
+-        'library\\command\\sync\\Service' => __DIR__ . '/..' . '/zoujingli/think-library/src/command/sync/Service.php',
+-        'library\\command\\sync\\Wechat' => __DIR__ . '/..' . '/zoujingli/think-library/src/command/sync/Wechat.php',
+-        'library\\command\\task\\Reset' => __DIR__ . '/..' . '/zoujingli/think-library/src/command/task/Reset.php',
+-        'library\\command\\task\\Start' => __DIR__ . '/..' . '/zoujingli/think-library/src/command/task/Start.php',
+-        'library\\command\\task\\State' => __DIR__ . '/..' . '/zoujingli/think-library/src/command/task/State.php',
+-        'library\\command\\task\\Stop' => __DIR__ . '/..' . '/zoujingli/think-library/src/command/task/Stop.php',
+-        'library\\driver\\Local' => __DIR__ . '/..' . '/zoujingli/think-library/src/driver/Local.php',
+-        'library\\driver\\Oss' => __DIR__ . '/..' . '/zoujingli/think-library/src/driver/Oss.php',
+-        'library\\driver\\Qiniu' => __DIR__ . '/..' . '/zoujingli/think-library/src/driver/Qiniu.php',
+-        'library\\logic\\Delete' => __DIR__ . '/..' . '/zoujingli/think-library/src/logic/Delete.php',
+-        'library\\logic\\Form' => __DIR__ . '/..' . '/zoujingli/think-library/src/logic/Form.php',
+-        'library\\logic\\Input' => __DIR__ . '/..' . '/zoujingli/think-library/src/logic/Input.php',
+-        'library\\logic\\Logic' => __DIR__ . '/..' . '/zoujingli/think-library/src/logic/Logic.php',
+-        'library\\logic\\Page' => __DIR__ . '/..' . '/zoujingli/think-library/src/logic/Page.php',
+-        'library\\logic\\Query' => __DIR__ . '/..' . '/zoujingli/think-library/src/logic/Query.php',
+-        'library\\logic\\Save' => __DIR__ . '/..' . '/zoujingli/think-library/src/logic/Save.php',
+-        'library\\tools\\Cors' => __DIR__ . '/..' . '/zoujingli/think-library/src/tools/Cors.php',
+-        'library\\tools\\Crypt' => __DIR__ . '/..' . '/zoujingli/think-library/src/tools/Crypt.php',
+-        'library\\tools\\Csrf' => __DIR__ . '/..' . '/zoujingli/think-library/src/tools/Csrf.php',
+-        'library\\tools\\Csv' => __DIR__ . '/..' . '/zoujingli/think-library/src/tools/Csv.php',
+-        'library\\tools\\Data' => __DIR__ . '/..' . '/zoujingli/think-library/src/tools/Data.php',
+-        'library\\tools\\Express' => __DIR__ . '/..' . '/zoujingli/think-library/src/tools/Express.php',
+-        'library\\tools\\Http' => __DIR__ . '/..' . '/zoujingli/think-library/src/tools/Http.php',
+-        'library\\tools\\Node' => __DIR__ . '/..' . '/zoujingli/think-library/src/tools/Node.php',
+-        'library\\tools\\Options' => __DIR__ . '/..' . '/zoujingli/think-library/src/tools/Options.php',
+-        'think\\Queue' => __DIR__ . '/..' . '/topthink/think-queue/src/Queue.php',
+-        'think\\composer\\Plugin' => __DIR__ . '/..' . '/topthink/think-installer/src/Plugin.php',
+-        'think\\composer\\ThinkExtend' => __DIR__ . '/..' . '/topthink/think-installer/src/ThinkExtend.php',
+-        'think\\composer\\ThinkFramework' => __DIR__ . '/..' . '/topthink/think-installer/src/ThinkFramework.php',
+-        'think\\composer\\ThinkTesting' => __DIR__ . '/..' . '/topthink/think-installer/src/ThinkTesting.php',
+-        'think\\helper\\Arr' => __DIR__ . '/..' . '/topthink/think-helper/src/Arr.php',
+-        'think\\helper\\Str' => __DIR__ . '/..' . '/topthink/think-helper/src/Str.php',
+-        'think\\queue\\CallQueuedHandler' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/CallQueuedHandler.php',
+-        'think\\queue\\Connector' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/Connector.php',
+-        'think\\queue\\Job' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/Job.php',
+-        'think\\queue\\Listener' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/Listener.php',
+-        'think\\queue\\Queueable' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/Queueable.php',
+-        'think\\queue\\ShouldQueue' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/ShouldQueue.php',
+-        'think\\queue\\Worker' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/Worker.php',
+-        'think\\queue\\command\\Listen' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/command/Listen.php',
+-        'think\\queue\\command\\Restart' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/command/Restart.php',
+-        'think\\queue\\command\\Subscribe' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/command/Subscribe.php',
+-        'think\\queue\\command\\Work' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/command/Work.php',
+-        'think\\queue\\connector\\Database' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/connector/Database.php',
+-        'think\\queue\\connector\\Redis' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/connector/Redis.php',
+-        'think\\queue\\connector\\Sync' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/connector/Sync.php',
+-        'think\\queue\\connector\\Topthink' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/connector/Topthink.php',
+-        'think\\queue\\job\\Database' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/job/Database.php',
+-        'think\\queue\\job\\Redis' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/job/Redis.php',
+-        'think\\queue\\job\\Sync' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/job/Sync.php',
+-        'think\\queue\\job\\Topthink' => __DIR__ . '/..' . '/topthink/think-queue/src/queue/job/Topthink.php',
+     );
+ 
+     public static function getInitializer(ClassLoader $loader)
+Index: public/static/admin.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- public/static/admin.js	(revision 30f2eb108219bf6cd246065ac3cf07986093e51d)
++++ public/static/admin.js	(revision )
+@@ -146,6 +146,25 @@
+                 if (!$this.data('input')) $this.data('input', $('[name="' + field + '"]').get(0));
+                 $this.uploadFile(function (url) {
+                     $($this.data('input')).val(url).trigger('change');
++
++                    //如果是事件扫描件第一张,就传到百度接口识别文字
++                    var curr_field = $this.data('field');
++                    if (curr_field == 'scan_img') {
++                        var img_urls   = $(" input[name='"+curr_field+"' ] ").val();
++                            img_urls   = img_urls.split('|');
++                        var img_length = img_urls.length;
++                        //如果是第一张就识别
++                        if (img_length == 1) {
++                            $("#ocr_status").html("识别中......");
++                            var url = window.ROOT_URL + "/account/events/_sendOCR";
++                            $.post(url,{img_url:img_urls[0]},function(res){
++                                $("#title").val(res.msg);
++                                $("#ocr_status").html("识别完成。");
++                            },"json");
++                        }
++                    }
++
++
+                 });
+             });
+         };
+@@ -527,6 +546,50 @@
+         }).trigger('change');
+     };
+ 
++    /*! 上传多个扫描件图片 */
++    $.fn.uploadMultipleScan = function () {
++        var type = $(this).data('type') || 'png,jpg,gif', name = $(this).attr('name') || 'umt-image';
++        var $tpl = $('<a class="uploadimage"></a>').attr('data-file', 'mul').attr('data-field', name).attr('data-type', type);
++        $(this).attr('name', name).after($tpl.data('input', this)).on('change', function () {
++            var input = this;
++            this.setImageData = function () {
++                input.value = input.getImageData().join('|');
++            };
++            this.getImageData = function () {
++                var values = [];
++                $(input).prevAll('.uploadimage').map(function () {
++                    values.push($(this).attr('data-tips-image'));
++                });
++                return values.reverse(), values;
++            };
++            var urls = this.getImageData(), srcs = this.value.split('|');
++            for (var i in srcs) if (srcs[i]) urls.push(srcs[i]);
++            $(this).prevAll('.uploadimage').remove();
++            this.value = urls.join('|');
++            for (var i in urls) {
++                var tpl = '<div class="uploadimage uploadimagemtl"><a class="layui-icon margin-right-5">&#xe602;</a><a class="layui-icon margin-right-5">&#x1006;</a><a class="layui-icon margin-right-5">&#xe603;</a></div>';
++                var $tpl = $(tpl).attr('data-tips-image', urls[i]).css('backgroundImage', 'url(' + urls[i] + ')').on('click', 'a', function (e) {
++                    e.stopPropagation();
++                    var $cur = $(this).parent();
++                    switch ($(this).index()) {
++                        case 1:// remove
++                            return $.msg.confirm('确定要移除这张图片吗？', function (index) {
++                                $cur.remove(), input.setImageData(), $.msg.close(index);
++                            });
++                        case 0: // right
++                            var lenght = $cur.siblings('div.uploadimagemtl').length;
++                            if ($cur.index() !== lenght) $cur.next().after($cur);
++                            return input.setImageData();
++                        case 2: // left
++                            if ($cur.index() !== 0) $cur.prev().before($cur);
++                            return input.setImageData();
++                    }
++                });
++                $(this).before($tpl);
++            }
++        }).trigger('change');
++    };
++
+     /*! 注册 data-load 事件行为 */
+     $body.on('click', '[data-load]', function () {
+         var url = $(this).attr('data-load'), tips = $(this).attr('data-tips'), time = $(this).attr('data-time');
+@@ -704,4 +767,47 @@
+     /*! 初始化事件 */
+     $.menu.listen();
+     $.vali.listen();
+-});
+\ No newline at end of file
++});
++
++/*弹出层*/
++/*
++    参数解释：
++    title	标题
++    url		请求的url
++    id		需要操作的数据id
++    w		弹出层宽度（缺省调默认值）
++    h		弹出层高度（缺省调默认值）
++*/
++var layer_index = '';
++function layer_show(title,url,w,h, isMax){
++    if (title == null || title == '') {
++        title=false;
++    };
++    if (url == null || url == '') {
++        url="404.html";
++    };
++    if (w == null || w == '') {
++        w=($(window).width() - 400);
++    };
++    if (h == null || h == '') {
++        h=($(window).height() - 120);
++    };
++
++    var perContent =  layer.open({
++        type: 2,
++        area: [w+'px', h +'px'],
++        fix: false, //不固定
++        maxmin: true,
++        shade:0.4,
++        title: title,
++        content: url,
++        success: function(layero, index){
++            layer_index = index;
++
++        }
++    });
++    if (isMax == true) {
++        layer.full(perContent);
++    };
++
++}
+\ No newline at end of file
+Index: application/account/view/cases/show_e_charts.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- application/account/view/cases/show_e_charts.html	(revision )
++++ application/account/view/cases/show_e_charts.html	(revision )
+@@ -0,0 +1,451 @@
++{extend name='admin@main'}
++
++{block name='content'}
++
++
++<style>
++    .layui-card{
++        border: 1px solid #dedede;
++    }
++
++    .layui-card-header .layui-a-tips {
++        position:absolute;
++        right:15px;
++        color:#01AAED
++    }
++    .layuiadmin-card-text {
++        background-color:#f8f8f8;
++        color:#777;
++        padding:24px
++    }
++    .layuiadmin-card-text .layui-text-top {
++        padding-bottom:10px
++    }
++    .layuiadmin-card-text .layui-text-top i {
++        margin-right:10px;
++        font-size:24px;
++        color:#009688
++    }
++    .layuiadmin-card-text .layui-text-top a {
++        line-height:24px;
++        font-size:16px;
++        vertical-align:top
++    }
++    .layuiadmin-card-text .layui-text-center {
++        height:44px;
++        line-height:22px;
++        margin-bottom:10px;
++        overflow:hidden
++    }
++    .layuiadmin-card-text .layui-text-bottom {
++        position:relative
++    }
++    .layuiadmin-card-text .layui-text-bottom a {
++        color:#777;
++        font-size:12px;
++        text-overflow:ellipsis;
++        word-break:break-all
++    }
++    .layuiadmin-card-text .layui-text-bottom span {
++        color:#CCC;
++        font-size:12px;
++        position:absolute;
++        right:0
++    }
++    .layuiadmin-badge,.layuiadmin-btn-group,.layuiadmin-span-color {
++        position:absolute;
++        right:15px
++    }
++    .layuiadmin-card-link a:hover,.layuiadmin-card-team li a:hover,.layuiadmin-card-text a:hover {
++        color:#01AAED;
++        transition:all .3s
++    }
++    .layuiadmin-card-status {
++        padding:0 10px 10px
++    }
++    .layuiadmin-card-status dd {
++        padding:15px 0;
++        border-bottom:1px solid #EEE;
++        display:-webkit-flex;
++        display:flex
++    }
++    .layuiadmin-card-status dd:last-child {
++        border:none
++    }
++    .layuiadmin-card-status dd div.layui-status-img,.layuiadmin-card-team .layui-team-img {
++        width:32px;
++        height:32px;
++        border-radius:50%;
++        background-color:#009688;
++        margin-right:15px
++    }
++    .layuiadmin-card-status dd div.layui-status-img a {
++        width:100%;
++        height:100%;
++        display:inline-block;
++        text-align:center;
++        line-height:32px
++    }
++    .layuiadmin-card-status dd div.layui-status-img img,.layuiadmin-card-team .layui-team-img img {
++        width:50%;
++        height:50%
++    }
++    .layuiadmin-card-status dd div a {
++        color:#01AAED
++    }
++    .layuiadmin-card-status dd div span {
++        color:#BBB
++    }
++    .layuiadmin-card-link {
++        padding-left:10px;
++        font-size:0
++    }
++    .layuiadmin-card-link a {
++        display:inline-block;
++        width:25%;
++        color:#666;
++        font-size:14px;
++        margin-bottom:12px
++    }
++    .layuiadmin-card-link button {
++        vertical-align:top
++    }
++    .layuiadmin-card-link button:hover {
++        color:#009688
++    }
++    .layuiadmin-card-team li {
++        padding:10px 0 10px 10px
++    }
++    .layuiadmin-card-team .layui-team-img {
++        display:inline-block;
++        margin-right:8px;
++        width:24px;
++        height:24px;
++        text-align:center;
++        line-height:24px
++    }
++    .layuiadmin-card-team span {
++        color:#777
++    }
++    .layuiadmin-badge {
++        top:50%;
++        margin-top:-9px;
++        color:#01AAED
++    }
++    .layuiadmin-card-list {
++        padding:15px
++    }
++    .layuiadmin-card-list p.layuiadmin-big-font {
++        font-size:36px;
++        color:#666;
++        line-height:36px;
++        padding:5px 0 10px;
++        overflow:hidden;
++        text-overflow:ellipsis;
++        word-break:break-all;
++        white-space:nowrap
++    }
++    .layuiadmin-card-list p.layuiadmin-normal-font {
++        padding-bottom:10px;
++        font-size:20px;
++        color:#666;
++        line-height:24px
++    }
++    .layuiadmin-span-color {
++        font-size:14px
++    }
++    .layuiadmin-span-color i {
++        padding-left:5px
++    }
++    .layuiadmin-card-status li {
++        position:relative;
++        padding:10px 0;
++        border-bottom:1px solid #EEE
++    }
++    .layuiadmin-card-status li h3 {
++        padding-bottom:5px;
++        font-weight:700
++    }
++    .layuiadmin-card-status li p {
++        padding-bottom:10px
++    }
++    .layuiadmin-card-status li>span {
++        color:#999
++    }
++    .layuiadmin-page-table td span.first {
++        color:#FF5722
++    }
++    .layuiadmin-page-table td span.second {
++        color:#FFB800
++    }
++    .layuiadmin-page-table td span.third {
++        color:#5FB878
++    }
++</style>
++
++
++<div class="layui-fluid">
++    <div class="layui-row layui-col-space15">
++
++        <div class="layui-col-sm6 layui-col-md3">
++            <div class="layui-card">
++                <div class="layui-card-header">
++                    <B>案件</B>
++                    <span class="layui-badge layui-bg-orange layuiadmin-badge">本周</span>
++                </div>
++                <div class="layui-card-body layuiadmin-card-list">
++
++                    <p class="layuiadmin-big-font">{$curriculum|default=0}个</p>
++                    <p>
++                        总数
++                        <span class="layuiadmin-span-color">0个 <i class="layui-icon"></i></span>
++                    </p>
++                </div>
++            </div>
++        </div>
++
++
++        <div class="layui-col-sm6 layui-col-md3">
++            <div class="layui-card">
++                <div class="layui-card-header">
++                    <B>案件</B>
++                    <span data-open="{:url('car/index')}" class="layui-badge layui-bg-red layuiadmin-badge">本月</span>
++                </div>
++                <div class="layui-card-body layuiadmin-card-list">
++                    <p class="layuiadmin-big-font">
++                        {$class|default=0}个
++                    </p>
++                    <p>
++                        总数
++                        <span class="layuiadmin-span-color">0个 <i class="layui-icon"></i></span>
++                    </p>
++                </div>
++            </div>
++        </div>
++        <div class="layui-col-sm6 layui-col-md3">
++            <div class="layui-card">
++                <div class="layui-card-header">
++                    <B>事件</B>
++                    <span  data-open="{:url('driver/index')}" class="layui-badge layui-bg-green layuiadmin-badge">本周</span>
++                </div>
++                <div class="layui-card-body layuiadmin-card-list">
++
++                    <p class="layuiadmin-big-font">
++                        {$system_user|default=0}个
++                    </p>
++                    <p>
++                        总数
++                        <span class="layuiadmin-span-color">0个 <i class="layui-icon"></i></span>
++                    </p>
++                </div>
++            </div>
++        </div>
++
++        <div class="layui-col-sm6 layui-col-md3">
++            <div class="layui-card">
++                <div class="layui-card-header">
++                    <B>事件</B>
++                    <span  data-open="{:url('cargps/index')}" class="layui-badge layui-bg-blue layuiadmin-badge">本月</span>
++                </div>
++                <div class="layui-card-body layuiadmin-card-list">
++                    <p class="layuiadmin-big-font">{$ym_student|default=0}个</p>
++                    <p>
++                        总数
++                        <span class="layuiadmin-span-color">0个 <i class="layui-icon"></i></span>
++                    </p>
++                </div>
++            </div>
++        </div>
++
++        <div class="layui-col-sm12">
++            <div class="layui-card">
++                <div class="layui-card-header title-label">
++                    近12个月案件、事件统计
++                </div>
++                <div class="layui-card-body">
++                    <div class="layui-row">
++                        <div class="layui-col-sm12">
++                            <div class="layui-carousel layadmin-carousel layadmin-dataview" data-anim="fade" lay-filter="LAY-index-pagetwo">
++                                <div carousel-item id="LAY-index-pagetwo">
++                                    <div><i class="layui-icon layui-icon-loading1 layadmin-loading"></i></div>
++                                </div>
++                            </div>
++                        </div>
++                       <!-- <div class="layui-col-sm4">
++                            <div class="layuiadmin-card-list">
++                                <p class="layuiadmin-normal-font">月访问数</p>
++                                <span>同上期增长</span>
++                                <div class="layui-progress layui-progress-big" lay-showPercent="yes">
++                                    <div class="layui-progress-bar" lay-percent="30%"></div>
++                                </div>
++                            </div>
++                            <div class="layuiadmin-card-list">
++                                <p class="layuiadmin-normal-font">月下载数</p>
++                                <span>同上期增长</span>
++                                <div class="layui-progress layui-progress-big" lay-showPercent="yes">
++                                    <div class="layui-progress-bar" lay-percent="20%"></div>
++                                </div>
++                            </div>
++                            <div class="layuiadmin-card-list">
++                                <p class="layuiadmin-normal-font">月收入</p>
++                                <span>同上期增长</span>
++                                <div class="layui-progress layui-progress-big" lay-showPercent="yes">
++                                    <div class="layui-progress-bar" lay-percent="25%"></div>
++                                </div>
++                            </div>
++                        </div>-->
++                    </div>
++                </div>
++            </div>
++        </div>
++
++
++        <div class="layui-col-sm7 layui-hide">
++
++            <div class="layui-card">
++                <div class="layui-card-header">咨询列表
++                    <div class="layui-btn-group layuiadmin-btn-group">
++                        <a data-open="{:url('admissions/index')}" class="layui-btn layui-btn-primary layui-btn-xs">更多</a>
++                    </div>
++                </div>
++                <div class="layui-card-body">
++                    <table class="layui-table layuiadmin-page-table" lay-skin="line">
++                        <thead>
++                        <tr>
++                            <th>姓名</th>
++                            <th>性别</th>
++                            <th>年龄层</th>
++                            <th>咨询课程</th>
++                            <th>咨询方式</th>
++                            <th>联系方式</th>
++                            <th>添加时间</th>
++                        </tr>
++                        </thead>
++                        <tbody>
++                        {volist name="data" id="data" }
++                        <tr>
++
++                            <td class='text-left nowrap'>{$data.truename}</td>
++                            <td class='text-left nowrap'>{$data.sex}</td>
++                            <td class='text-left nowrap'>{$data.age}</td>
++                            <td class='text-left nowrap'>{$data.course}</td>
++                            <td class='text-left nowrap'>{$data.consult}</td>
++                            <td class='text-left nowrap'>{$data.contact}</td>
++                            <td class='text-left nowrap'>{$data.add_time}</td>
++
++                        </tr>
++                        {/volist}
++                        </tbody>
++                    </table>
++                </div>
++            </div>
++
++        </div>
++
++
++        <div class="layui-col-sm5 layui-hide">
++            <div class="layui-card">
++                <div class="layui-card-header">统计</div>
++                <div class="layui-card-body">
++
++                    <div id="car_chart"   style="height: 280px;"></div>
++                    <div id="driver_chart"   style="height: 280px;"></div>
++
++                </div>
++            </div>
++        </div>
++
++    </div>
++</div>
++
++
++
++<script>
++    layui.config({
++        base: '__ROOT__/static/js/' //静态资源所在路径
++    }).extend({
++        index: 'lib/index' //主入口模块
++    }).use(['echartsTheme']);
++
++    layui.use(["carousel"], function() {
++        var e = layui.$
++            , a = (layui.admin,
++            layui.carousel)
++            , l = layui.element
++            , t = layui.device();
++        e(".layadmin-carousel").each(function() {
++            var l = e(this);
++            a.render({
++                elem: this,
++                width: "100%",
++                height:'450px',
++                arrow: "none",
++                interval: l.data("interval"),
++                autoplay: l.data("autoplay") === !0,
++                trigger: t.ios || t.android ? "click" : "hover",
++                anim: l.data("anim")
++            })
++        });
++           // l.render("progress")
++    })
++
++        layui.use(["carousel", "echarts"], function () {
++
++            var e = layui.$
++                , a = (layui.carousel,
++                layui.echarts)
++                , l = []
++                , t = [{
++                tooltip: {
++                    trigger: "axis"
++                },
++                calculable: !0,
++                legend: {
++                    data: ["案件", "事件"]
++                },
++                xAxis: [{
++                    type: "category",
++                    data: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
++                }],
++                yAxis: [{
++                    type: "value",
++                    name: "案件数量",
++                    axisLabel: {
++                        formatter: "{value} 个"
++                    }
++                }, {
++                    type: "value",
++                    name: "事件数量",
++                    axisLabel: {
++                        formatter: "{value} 个"
++                    }
++                }],
++                series: [{
++                    name: "案件",
++                    type: "line",
++                    data: [2, 3, 5, 3, 0, 1, 3, 1, 1, 1, 0, 1]
++                }, {
++                    name: "事件",
++                    type: "line",
++                    yAxisIndex: 1,
++                    data: [1, 2, 7, 6, 0, 2, 5, 3, 3, 3, 0, 1]
++                } ]
++            }]
++                , i = e("#LAY-index-pagetwo").children("div")
++                , n = function (e) {
++                l[e] = a.init(i[e], layui.echartsTheme),
++                    l[e].setOption(t[e]),
++                    window.onresize = l[e].resize;
++
++            };
++            i[0] && n(0);
++
++
++        })
++
++
++
++</script>
++
++
++{/block}
+\ No newline at end of file

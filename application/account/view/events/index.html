@@ -1,0 +1,78 @@
+{extend name='admin@main'}
+
+{block name="button"}
+<!--{if auth("account/events/add")}-->
+<button data-open='{:url("add")}' data-title="录入案件" class='layui-btn layui-btn-sm layui-btn-normal'>录入事件</button>
+<!--{/if}-->
+<!--{if auth("account/events/del")}-->
+<button data-action='{:url("del")}' data-rule="id#{key}" class='layui-btn layui-btn-sm layui-btn-danger'>删除事件</button>
+<!--{/if}-->
+{/block}
+
+{block name="content"}
+<table class="layui-table" lay-skin="">
+    <caption class="margin-bottom-10 text-left">{include file='cases/index_search'}</caption>
+    <!--{notempty name='list'}-->
+    <tr>
+        <th class='list-table-check-td think-checkbox'>
+            <input data-auto-none data-check-target='.list-check-box' type='checkbox'>
+        </th>
+
+        <th class='text-left nowrap'>所属案件</th>
+        <th class='text-left nowrap'>事件名称</th>
+        <th class="text-center">开始时间</th>
+        <th class="text-center">结案时间</th>
+        <th class="text-center">状态</th>
+        <th></th>
+    </tr>
+    <!--{/notempty}-->
+    <tbody>
+    <!--{foreach $list as $key=>$vo}-->
+    <tr>
+        <td class='list-table-check-td think-checkbox'>
+            <input class="list-check-box" value='{$vo.id}' type='checkbox'>
+        </td>
+        <td class='text-left nowrap'>{$vo.case_title|default=''}</td>
+        <td class='text-left nowrap'>
+            {$vo.title|default=''}
+            <!-- {volist  name="$vo.scan_img_arr" id="v" }  -->
+            <!-- {if condition="$v neq '' "} -->
+             <a data-tips-image="{$v|default=''}" class="fa fa-image font-s14 margin-left-5"></a>
+            <!-- {/if} -->
+            <!--{/volist}-->
+
+        </td>
+        <td class='text-center nowrap'>{eq name='vo.start_time' value='0'}未设置开始时间{else}{$vo.start_time|date='Y-m-d'}{/eq}</td>
+        <td class='text-center nowrap'>{eq name='vo.end_time'   value='0'}未设置结束时间{else}{$vo.end_time|date='Y-m-d'}{/eq}</td>
+        <td class='text-center nowrap'>
+            {eq name='vo.status' value='0'}<span class="layui-badge">未结束</span>{else}<span class="layui-badge layui-bg-green">已结束</span>{/eq}<br>
+        </td>
+        <td class='text-left nowrap'>
+
+            {if auth("account/events/edit")}
+            <a data-title="编辑案件" class="layui-btn layui-btn-xs" data-open='{:url("edit")}?id={$vo.id}'>编 辑</a>
+            {/if}
+
+            {if $vo.status eq 0 and auth("account/events/close_case")}
+            <a class="layui-btn layui-btn-xs layui-btn-warm" data-confirm="确定要结束吗?" data-action="{:url('close_case')}" data-value="id#{$vo.id};status#1">结 束</a>
+            {/if}
+
+            {if auth("account/events/del")}
+            <a class="layui-btn layui-btn-xs layui-btn-danger" data-confirm="确定要删除数据吗?" data-action="{:url('del')}" data-value="id#{$vo.id}">删 除</a>
+            {/if}
+
+        </td>
+    </tr>
+    <!--{/foreach}-->
+    </tbody>
+</table>
+
+{empty name='list'}<span class="notdata">没有记录哦</span>{else}{$pagehtml|raw|default=''}{/empty}
+
+<style>
+    table.trim-bottom-border tr:last-child td {
+        border: none !important;
+    }
+</style>
+
+{/block}

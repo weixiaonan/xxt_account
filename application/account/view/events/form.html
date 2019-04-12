@@ -1,0 +1,182 @@
+{extend name='admin@main'}
+
+{block name="content"}
+<form onsubmit="return false;" id="GoodsForm" data-auto="true" method="post" class='layui-form layui-card layui-form-pane' autocomplete="off">
+
+    <div class="layui-card-body padding-left-40">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label title-label">所属案件</label>
+            <div class="layui-input-block">
+                <select name='cases_id' required="required" class='layui-select ' id="cases_id" lay-filter="select_cases" lay-search="" >
+                    <option  value=''>-请选择案件-</option>
+                    <!--{foreach $cases_list as $val}-->
+                    <!--{eq name='val.id' value='$vo.cases_id|default=""'}-->
+                    <option selected value='{$val.id}'>{$val.title}</option>
+                    <!--{else}-->
+                    <option value='{$val.id}'>{$val.title}</option>
+                    <!--{/eq}-->
+                    <!--{/foreach}-->
+                </select>
+
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label title-label">事件名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="title" id="title" value='{$vo.title|default=""}'
+                       required  title="请输入事件名称" placeholder="请输入事件名称" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label title-label">开始时间</label>
+            <div class="layui-input-inline">
+                <input name="start_time" id='start_time' readonly value="{$vo.start_time|default=''}"
+                       title="请选择开始时间" placeholder="请选择开始时间" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label title-label">结束时间</label>
+            <div class="layui-input-inline">
+                <input name="end_time" id='end_time' readonly value="{$vo.end_time|default=''}"
+                       title="请选择结束时间" placeholder="请选择结束时间" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label title-label">发生地点</label>
+            <div class="layui-input-block">
+                <input type="text" name="place" value='{$vo.place|default=""}'
+                        title="请输入发生地点" placeholder="请输入发生地点" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <table class="layui-table">
+                <thead>
+                <tr>
+                    <th class="text-left title-label">案件扫描件组图
+                        <span style="color: #FF5722;font-size: 14px;">（自动识别第一张附件扫描件的标题或名称，自动填入事件名称，需要几秒时间）</span>
+                        <span id="ocr_status" style="color: red;font-size: 14px;"></span>
+                    </th>
+                </tr>
+                <tr>
+                    <td width="auto" class="text-left"><input name="scan_img" type="hidden" value="{$vo.scan_img|default=''}"></td>
+                </tr>
+                </thead>
+            </table>
+            <script>$('[name="scan_img"]').uploadMultipleScan()</script>
+        </div>
+
+
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label title-label">事件内容</label>
+            <div class="layui-input-block">
+                <textarea name="content">{$vo.content|default=''|raw}</textarea>
+            </div>
+        </div>
+
+        <div class="layui-form-item text-center">
+            {notempty name='vo.id'}<input type="hidden" name="id" value="{$vo.id}">{/notempty}
+            <button class="layui-btn layui-btn-danger" ng-click="hsitoryBack()" type="button">取消编辑</button>
+            <button class="layui-btn" type="submit">提交保存</button>
+        </div>
+
+    </div>
+</form>
+
+<style>
+
+
+
+    .goods-spec-box input {
+        z-index: 1;
+        width: 120px;
+        position: relative;
+        border: 1px solid #999;
+        padding: 5px 0 5px 45px;
+        display: inline-block !important;
+    }
+
+    .goods-spec-box input[type=checkbox] {
+        z-index: 2;
+        width: 40px;
+        height: 28px;
+        border: none;
+        cursor: pointer;
+        appearance: none;
+        position: absolute;
+        -webkit-appearance: none;
+    }
+
+    .goods-spec-box input[type=checkbox]:before {
+        top: 1px;
+        left: 1px;
+        width: 40px;
+        height: 26px;
+        content: ' ';
+        position: absolute;
+        background: #c9c9c9;
+    }
+
+    .goods-spec-box input[type=checkbox]:after {
+        top: 1px;
+        left: 1px;
+        color: #999;
+        width: 40px;
+        height: 26px;
+        content: '\e63f';
+        font-size: 16px;
+        line-height: 26px;
+        position: absolute;
+        text-align: center;
+        font-family: 'layui-icon';
+    }
+
+    .goods-spec-box input[type=checkbox]:checked:after {
+        color: #333;
+        content: '\e605';
+    }
+</style>
+
+{/block}
+
+{block name='script'}
+<script>
+    window.form.render();
+    window.laydate.render({elem: '#start_time'});
+    window.laydate.render({elem: '#end_time'});
+
+    require(['ckeditor', 'angular'], function () {
+        window.createEditor('[name="content"]', {height: 350});
+        let app = angular.module("GoodsForm", []).run(callback);
+        angular.bootstrap(document.getElementById(app.name), [app.name]);
+
+        function callback($rootScope) {
+            $rootScope.isAddMode = parseInt('{$isAddMode|default=0}');
+            let defaultValues = angular.fromJson('{$defaultValues|raw|default=0}') || {};
+            $rootScope.specs = angular.fromJson('{$vo.specs|raw|default=0}') || [{name: '默认分组', list: [{name: '默认规格', check: true}]}];
+
+            // 返回商品列表
+            $rootScope.hsitoryBack = function () {
+                $.msg.confirm('确定要取消编辑吗？', function (index) {
+                    history.back(), $.msg.close(index);
+                });
+            };
+            // 设置默认值
+            $rootScope.setValue = function (key, type, value, call) {
+                defaultValues[key] || (defaultValues[key] = {});
+                return defaultValues[key][type] = eval(call.replace('_', "'" + value + "'"));
+            };
+            // 读取默认值
+            let getValue = function (key, callback) {
+                if (typeof callback === 'function') return callback(defaultValues[key] || {});
+            };
+
+
+        }
+    })
+</script>
+{/block}

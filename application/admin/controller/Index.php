@@ -50,9 +50,13 @@ class Index extends Controller
      */
     public function main()
     {
-        $this->title = '后台首页';
+        if (!\app\admin\service\Auth::isLogin()) {
+            $this->error('需要登录才能操作哦！');
+        }
+        $this->title = '数据统计';
         $this->think_ver = \think\App::VERSION;
         $this->mysql_ver = Db::query('select version() as ver')[0]['ver'];
+        $this->assign('data', []);
         $this->fetch();
     }
 
