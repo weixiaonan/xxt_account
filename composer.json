@@ -20,7 +20,9 @@
     "zoujingli/ip2region": "^1.0",
     "topthink/think-queue": "^2.0",
     "zoujingli/think-library": "5.1.*-dev",
-    "zoujingli/weopen-developer": "dev-master"
+    "zoujingli/weopen-developer": "dev-master",
+    "topthink/think-captcha": "^2.0",
+	"tencentcloud/tencentcloud-sdk-php": "3.0.59"
   },
   "repositories": {
     "packagist": {
