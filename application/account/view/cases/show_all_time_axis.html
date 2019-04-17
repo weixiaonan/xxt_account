@@ -1,0 +1,18 @@
+{extend name='admin@main'}
+
+{block name="button"}
+
+{/block}
+
+{block name="content"}
+
+<iframe src="{:url('account/cases/showAllTimeData')}" id="all_time_axis"  width="100%" height="100%"  scrolling="no" frameborder="0"></iframe>
+{/block}
+{block name='script'}
+<script>
+    layui.use(["jquery"], function () {
+        var $ = layui.jquery;
+        $("#all_time_axis").height( ($(window).height() - 80) + 'px');
+    })
+</script>
+{/block}

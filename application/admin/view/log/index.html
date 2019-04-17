@@ -9,7 +9,7 @@
 {/block}
 
 {block name="content"}
-<table class="layui-table" lay-skin="line">
+<table class="layui-table" lay-skin="">
     <caption class="margin-bottom-10 text-left">{include file='log/index_search'}</caption>
     {notempty name='list'}
     <thead>
@@ -17,10 +17,10 @@
         <th class='list-table-check-td think-checkbox'>
             <input data-auto-none data-check-target='.list-check-box' type='checkbox'>
         </th>
-        <th class='text-left nowrap' width="20%">操作</th>
+        <th class='text-left nowrap' width="45%">操作</th>
         <th class='text-left nowrap' width="20%">权限</th>
         <th class='text-left nowrap' width="20%">位置</th>
-        <th class='text-left nowrap' width="20%">操作时间</th>
+        <th class='text-left nowrap' width="10%">操作时间</th>
         <th></th>
     </tr>
     </thead>
@@ -30,9 +30,9 @@
         <td class='list-table-check-td think-checkbox'>
             <input class="list-check-box" value='{$vo.id}' type='checkbox'>
         </td>
-        <td class='text-left nowrap'>
+        <td title="{$vo.content|default='--'}" class='text-left nowrap'>
             行为：<strong>{$vo.action|default='--'}</strong><br>
-            描述：{$vo.content|default='--'}
+            描述：{$vo.content|default='--'|cut_str=50}
         </td>
         <td class='text-left nowrap'>
             账号：{$vo.username|default='--'}<br>

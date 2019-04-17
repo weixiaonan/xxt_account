@@ -158,7 +158,7 @@ $(function () {
                             $("#ocr_status").html("识别中......");
                             var url = window.ROOT_URL + "/account/events/_sendOCR";
                             $.post(url,{img_url:img_urls[0]},function(res){
-                                $("#title").val(res.msg);
+                                if (res.msg != '') $("#title").val(res.msg);
                                 $("#ocr_status").html("识别完成。");
                             },"json");
                         }
@@ -779,7 +779,7 @@ $(function () {
     h		弹出层高度（缺省调默认值）
 */
 var layer_index = '';
-function layer_show(title,url,w,h, isMax){
+function layer_show(title,url,w,h, isMax, offset){
     if (title == null || title == '') {
         title=false;
     };
@@ -787,19 +787,20 @@ function layer_show(title,url,w,h, isMax){
         url="404.html";
     };
     if (w == null || w == '') {
-        w=($(window).width() - 400);
+        w=($(window).width() - 202);
     };
     if (h == null || h == '') {
-        h=($(window).height() - 120);
+        h=($(window).height() - 63);
     };
 
     var perContent =  layer.open({
         type: 2,
         area: [w+'px', h +'px'],
         fix: false, //不固定
-        maxmin: true,
+        maxmin: isMax ? isMax : true,
         shade:0.4,
         title: title,
+        offset: offset ? offset : 'rb',
         content: url,
         success: function(layero, index){
             layer_index = index;

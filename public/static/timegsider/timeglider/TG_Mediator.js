@@ -10,9 +10,9 @@
 
 /*******************************
 	TIMELINE MEDIATOR
-	� handles timeline behavior, 
-	� reflects state back to view
-	� owns the timeline and event data models
+	� handles timeline behavior, 
+	� reflects state back to view
+	� owns the timeline and event data models
 
 ********************************/
 (function(tg){
@@ -490,8 +490,8 @@
 				}
 	    		this.focusToEvent(_.last(backEvents).attributes, cb);
 	    	} else {
-	    		alert("There are no events prior to this point");
-	    		
+	    		//alert("There are no events prior to this point");
+                alert("往前已经没有内容！");
 	    		return false;
 	    	}
 	    },
@@ -560,7 +560,8 @@
 				this.focusToEvent(_.first(fwdEvents).attributes, cb);
 			} else {
 			
-				alert("There are no events farther ahead of this point.");
+				alert("往后已经没有内容！");
+				//alert("There are no events farther ahead of this point.");
 				return false;
 				
 			}

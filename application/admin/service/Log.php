@@ -32,12 +32,15 @@ class Log
      */
     public static function write($action = '行为', $content = "内容描述")
     {
+        $action_arr = ['admin' => '系统管理', 'account' => '台账管理'];
+        $module     = request()->module() ? request()->module() : '';
         $data = [
             'node'     => Node::current(),
             'geoip'    => PHP_SAPI === 'cli' ? '127.0.0.1' : request()->ip(),
-            'action'   => $action,
+            'action'   => isset($action_arr[$module]) ? $action_arr[$module] : $action,
             'content'  => $content,
             'username' => PHP_SAPI === 'cli' ? 'cli' : session('user.username'),
+            'os'       => $_SERVER['HTTP_USER_AGENT']
         ];
         return Db::name('SystemLog')->insert($data) !== false;
     }

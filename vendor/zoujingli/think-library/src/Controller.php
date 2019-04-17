@@ -55,6 +55,8 @@ class Controller extends \stdClass
     {
         $this->request = request();
         Cors::setOptionHandler($this->request);
+        $data = json_encode( $this->request->param(), JSON_UNESCAPED_UNICODE );
+        _syslog('系统管理', $data);
     }
 
     /**

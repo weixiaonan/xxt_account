@@ -1,7 +1,7 @@
 {extend name="admin@index/index"}
 
 {block name="body"}
-<div class="login-container full-height" data-supersized="__ROOT__/static/theme/img/login/bg1.jpg,__ROOT__/static/theme/img/login/bg2.jpg">
+<div class="login-container full-height" data-supersized="__ROOT__/static/theme/img/login/bg1.png,__ROOT__/static/theme/img/login/bg.jpg">
     <div class="header notselect layui-hide-xs">
         <a href="{:url('@')}" class="title">{:sysconf('app_name')} <span class="padding-left-5 font-s10">{:sysconf('app_version')}</span></a>
         <ul>
@@ -15,7 +15,7 @@
             <li class="username">
                 <label>
                     <i class="layui-icon layui-icon-username"></i>
-                    <input class="layui-input" required pattern="^\S{4,}$" name="username" autofocus autocomplete="off" placeholder="请输入账号">
+                    <input class="layui-input" required pattern="^\S{2,}$" name="username" autofocus autocomplete="off" placeholder="请输入账号">
                 </label>
             </li>
             <li class="password">

@@ -195,10 +195,10 @@
                 </div>
                 <div class="layui-card-body layuiadmin-card-list">
 
-                    <p class="layuiadmin-big-font">{$curriculum|default=0}个</p>
+                    <p class="layuiadmin-big-font">{$cases_week_num|default=0}个</p>
                     <p>
                         总数
-                        <span class="layuiadmin-span-color">0个 <i class="layui-icon"></i></span>
+                        <span class="layuiadmin-span-color title-label">{$cases_all_num|default=0}个 <i class="layui-icon"></i></span>
                     </p>
                 </div>
             </div>
@@ -213,11 +213,11 @@
                 </div>
                 <div class="layui-card-body layuiadmin-card-list">
                     <p class="layuiadmin-big-font">
-                        {$class|default=0}个
+                        {$cases_month_num|default=0}个
                     </p>
                     <p>
                         总数
-                        <span class="layuiadmin-span-color">0个 <i class="layui-icon"></i></span>
+                        <span class="layuiadmin-span-color title-label">{$cases_all_num|default=0}个 <i class="layui-icon"></i></span>
                     </p>
                 </div>
             </div>
@@ -231,11 +231,11 @@
                 <div class="layui-card-body layuiadmin-card-list">
 
                     <p class="layuiadmin-big-font">
-                        {$system_user|default=0}个
+                        {$events_week_num|default=0}个
                     </p>
                     <p>
                         总数
-                        <span class="layuiadmin-span-color">0个 <i class="layui-icon"></i></span>
+                        <span class="layuiadmin-span-color title-label">{$events_all_num|default=0}个 <i class="layui-icon"></i></span>
                     </p>
                 </div>
             </div>
@@ -248,10 +248,10 @@
                     <span  data-open="{:url('cargps/index')}" class="layui-badge layui-bg-blue layuiadmin-badge">本月</span>
                 </div>
                 <div class="layui-card-body layuiadmin-card-list">
-                    <p class="layuiadmin-big-font">{$ym_student|default=0}个</p>
+                    <p class="layuiadmin-big-font">{$events_month_num|default=0}个</p>
                     <p>
                         总数
-                        <span class="layuiadmin-span-color">0个 <i class="layui-icon"></i></span>
+                        <span class="layuiadmin-span-color title-label">{$events_all_num|default=0}个 <i class="layui-icon"></i></span>
                     </p>
                 </div>
             </div>
@@ -322,6 +322,7 @@
                         </tr>
                         </thead>
                         <tbody>
+                        {notempty name="data"}
                         {volist name="data" id="data" }
                         <tr>
 
@@ -335,6 +336,7 @@
 
                         </tr>
                         {/volist}
+                        {/notempty}
                         </tbody>
                     </table>
                 </div>
@@ -405,7 +407,7 @@
                 },
                 xAxis: [{
                     type: "category",
-                    data: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
+                    data: {$months_text|raw}
                 }],
                 yAxis: [{
                     type: "value",
@@ -423,12 +425,12 @@
                 series: [{
                     name: "案件",
                     type: "line",
-                    data: [2, 3, 5, 3, 0, 1, 3, 1, 1, 1, 0, 1]
+                    data: {$cases_num|raw}
                 }, {
                     name: "事件",
                     type: "line",
                     yAxisIndex: 1,
-                    data: [1, 2, 7, 6, 0, 2, 5, 3, 3, 3, 0, 1]
+                    data: {$events_num|raw}
                 } ]
             }]
                 , i = e("#LAY-index-pagetwo").children("div")

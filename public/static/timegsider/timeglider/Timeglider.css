@@ -1628,7 +1628,7 @@ background-color:#717171;
 	margin-right:8px;
 }
 
-.tg-full_modal-body img {
+.tg-full_modal-body .full-modal-body-img {
 	max-width:33%;
 	height:auto;
 	float:left;

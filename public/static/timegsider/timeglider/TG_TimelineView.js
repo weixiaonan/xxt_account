@@ -168,7 +168,7 @@ tg.TG_TimelinePlayer = function (widget, mediator) {
 		+ "<div class='dateline'>{{html dateline}}</div>"
 		+ "<h4>${title}</h4><div class='tg-full_modal-vidimg'></div>"
 		+ "<div class='tg-full_modal-body'>"
-		+ "{{html image}}{{html description}}"
+		+ "{{html images}}{{html image}}{{html description}}"
 		// + "<div id='insert'></div>"
 		+ "</div>"
 		+ "<div class='tg-full_modal-links'><ul>{{html links}}</ul></div>"
@@ -3680,8 +3680,8 @@ tg.TG_TimelinePlayer.prototype = {
 			
 			// modal type: first check event, then timeline-wide option
 			modal_type = ev.modal_type || options.event_modal.type;			
-						
-			var ev_img = (ev.image && ev.image.src) ? "<img src='" + ev.image.src + "'>" : "",
+			//图片
+			var ev_img = (ev.image && ev.image.src) ? "<img class='full-modal-body-img' src='" + ev.image.src + "'>" : "",
 			
 			links = this.createEventLinksMenu(ev.link),
 		  	
@@ -3692,9 +3692,24 @@ tg.TG_TimelinePlayer.prototype = {
 				link:ev.link,
 				dateline: me.getEventDateLine(ev),
 				links:links,
-				image:ev_img
+				//image:ev_img
+				image:''  //把原来的单张图片去除，因为已经有图片切换
 			}
-			
+
+			var images = '<div class="swiper-container" id="test10"><div class="swiper-wrapper" carousel-item="">';
+				for(var i in  ev.images) {
+                    images +=' <div  class="swiper-slide"><img  src="'+ev.images[i]+'"></div>';
+				}
+        		images +=' </div> <div class="swiper-button-prev"></div><div class="swiper-button-next"></div><div class="swiper-pagination"></div></div>';
+			    //console.log(ev.images)
+				if (ev.images[0] != '') {
+                    templ_obj.images = images;
+				} else {
+                    templ_obj.images = '';
+				}
+
+
+
 			if (ev.video) { 
 				templ_obj.video = ev.video;
 				modal_type = "full";
@@ -3828,7 +3843,18 @@ tg.TG_TimelinePlayer.prototype = {
     	  				
     	  			}
 
-					
+                    var mySwiper = new Swiper ('.swiper-container', {
+                       // direction: 'vertical', // 垂直切换选项
+                        loop: true, // 循环模式选项
+                        // 如果需要前进后退按钮
+                        navigation: {
+                            nextEl: '.swiper-button-next',
+                            prevEl: '.swiper-button-prev',
+                        },
+                        pagination: {
+                            el: '.swiper-pagination',
+                        }
+                    })
 				break;
 					
 				

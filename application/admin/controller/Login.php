@@ -60,12 +60,12 @@ class Login extends Controller
                 'username' => $this->request->post('username'),
                 'password' => $this->request->post('password'),
             ], [
-                'username' => 'require|min:4',
+                'username' => 'require|min:2',
                 'password' => 'require|min:4',
             ], [
                 'username.require' => '登录账号不能为空！',
                 'password.require' => '登录密码不能为空！',
-                'username.min'     => '登录账号长度不能少于4位有效字符！',
+                'username.min'     => '登录账号长度不能少于2位有效字符！',
                 'password.min'     => '登录密码长度不能少于4位有效字符！',
             ]);
             // 用户信息验证
